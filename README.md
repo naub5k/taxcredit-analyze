@@ -1,4 +1,5 @@
 # taxcredit-analyze
+<<<<<<< HEAD
 
 고용증대세액공제 경정청구 대상 기업 분석을 위한 전용 웹앱입니다.  
 사업자등록번호를 기준으로 DB에서 실시간 데이터를 조회하고,  
@@ -108,3 +109,6 @@ npm run build
 - [React 문서](https://react.dev/)
 - [TypeScript 문서](https://www.typescriptlang.org/)
 - [Tailwind CSS 문서](https://tailwindcss.com/)
+=======
+세액공제 분석용 웹앱 (고용증대세액공제 대상 여부 분석 기능 포함)
+>>>>>>> 83b8dff7eca022c145ba4b855b91e16a6d1d9ead
