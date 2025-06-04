@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { 
-  fetchCompanyData, 
   analyzeCompanyTaxCredit, 
   formatCurrency, 
   formatBizno,
@@ -120,7 +119,6 @@ const hasValidData = (response: any): boolean => {
 
 export default function CompanyDetail() {
   const { bizno } = useParams();
-  const navigate = useNavigate();
   
   // ✅ 명시적 타입 선언 - 더 유연한 타입으로 수정 (작업요청서_20250604_005)
   const [companyData, setCompanyData] = useState<InsuCleanRecord | any | null>(null);

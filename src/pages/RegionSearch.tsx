@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { API_CONFIG } from '../config/pageConfig';
 
@@ -30,7 +30,7 @@ const RegionSearch: React.FC = () => {
   ];
 
   // API 호출 함수
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     if (!selectedSido) return;
 
     setLoading(true);
@@ -65,7 +65,7 @@ const RegionSearch: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedSido, selectedGugun]);
 
   // 검색 실행
   const handleSearch = () => {
@@ -85,7 +85,7 @@ const RegionSearch: React.FC = () => {
     if (selectedSido) {
       fetchCompanies();
     }
-  }, []);
+  }, [fetchCompanies]);
 
   // 사업자등록번호 포맷팅
   const formatBizno = (bizno: string) => {

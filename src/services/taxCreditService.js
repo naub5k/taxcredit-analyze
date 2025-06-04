@@ -1,4 +1,4 @@
-import { TAX_CREDIT_CONFIG, RISK_CLASSIFICATION, API_CONFIG } from '../config/pageConfig.js';
+import { RISK_CLASSIFICATION, API_CONFIG } from '../config/pageConfig.js';
 import { getYearValue, getExclusionStatus } from '../types/InsuCleanRecord';
 
 /**

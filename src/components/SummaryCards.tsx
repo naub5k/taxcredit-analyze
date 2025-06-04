@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardContent } from './ui/card';
-import { formatCurrency } from '../services/taxCreditService';
 
 /**
  * 💰 SummaryCards v2.1 - IDE작업기준서 완전 반영
