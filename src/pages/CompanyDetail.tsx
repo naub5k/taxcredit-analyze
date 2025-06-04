@@ -342,14 +342,14 @@ export default function CompanyDetail() {
     console.log('🔄 useEffect 트리거 - fetchCompanyDataHandler 호출 예정');
     console.log('🔍 현재 bizno:', bizno);
     fetchCompanyDataHandler();
-  }, [fetchCompanyDataHandler]);
+  }, [fetchCompanyDataHandler, bizno]);
 
   // 🔄 데이터 변경 시 재분석
   useEffect(() => {
     console.log('🔄 useEffect 트리거 - calculateTaxCreditAnalysis 호출 예정');
     console.log('🔍 companyData 존재 여부:', companyData ? 'YES' : 'NO');
     calculateTaxCreditAnalysis();
-  }, [calculateTaxCreditAnalysis]);
+  }, [calculateTaxCreditAnalysis, companyData]);
 
   // 🔍 companyData 상태 변경 추적 (작업요청서_20250604_005)
   useEffect(() => {

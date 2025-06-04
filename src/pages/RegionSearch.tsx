@@ -85,7 +85,7 @@ const RegionSearch: React.FC = () => {
     if (selectedSido) {
       fetchCompanies();
     }
-  }, [fetchCompanies]);
+  }, [fetchCompanies, selectedSido]);
 
   // 사업자등록번호 포맷팅
   const formatBizno = (bizno: string) => {
