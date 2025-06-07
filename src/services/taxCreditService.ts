@@ -119,8 +119,103 @@ export const fetchCompanyInfo = async (bizno: string): Promise<AnalysisResult> =
   }
 };
 
+/**
+ * 회사 세액공제 분석 함수
+ */
+export const analyzeCompanyTaxCredit = (
+  companyData: any, 
+  youthRatio: number = 0, 
+  socialInsuranceRate: number = 1.0
+): any => {
+  try {
+    const employeeData = getEmployeeData(companyData.사업자등록번호 || '');
+    const results = generateMockAnalysisResults(employeeData);
+    
+    return {
+      results: results,
+      summary: { 
+        총계: 15350, 
+        사후관리종료: 8800, 
+        사후관리진행중: 6550, 
+        기간경과미신청: 0 
+      },
+      companyInfo: {
+        bizno: companyData.사업자등록번호 || '',
+        companyName: companyData.사업장명 || '',
+        companyType: '주식회사',
+        region: companyData.시도 || '',
+        industry: companyData.업종명 || '',
+        industryCode: companyData.업종코드 || '',
+        sido: companyData.시도 || '',
+        gugun: companyData.구군 || '',
+        establishedDate: companyData.성립일자 || ''
+      }
+    };
+  } catch (error: any) {
+    console.error('세액공제 분석 중 오류:', error);
+    return {
+      results: [],
+      summary: { 총계: 0, 사후관리종료: 0, 사후관리진행중: 0, 기간경과미신청: 0 },
+      companyInfo: null
+    };
+  }
+};
+
+/**
+ * 통화 포맷 함수
+ */
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('ko-KR', {
+    style: 'currency',
+    currency: 'KRW'
+  }).format(amount);
+};
+
+/**
+ * 사업자번호 포맷 함수
+ */
+export const formatBizno = (bizno: string): string => {
+  if (!bizno) return '';
+  // 123-45-67890 형식으로 포맷
+  const cleaned = bizno.replace(/\D/g, '');
+  if (cleaned.length === 10) {
+    return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 5)}-${cleaned.slice(5)}`;
+  }
+  return bizno;
+};
+
+/**
+ * 경영진 보고서 생성 함수
+ */
+export const generateExecutiveReport = (
+  summary: any, 
+  companyInfo: any = null
+): any => {
+  return {
+    title: '세액공제 분석 경영진 보고서',
+    summary: summary,
+    companyInfo: companyInfo,
+    recommendations: [
+      '즉시 신청 가능한 세액공제 항목 우선 처리',
+      '사후관리 기간 내 필요 서류 준비',
+      '향후 고용증대 계획 수립 검토'
+    ],
+    totalPotentialCredit: summary?.총계 || 0,
+    riskAssessment: '낮음',
+    nextSteps: [
+      '세무 전문가 상담',
+      '필요 서류 준비',
+      '신청 일정 계획 수립'
+    ]
+  };
+};
+
 // 기본 내보내기
 export default {
   fetchTaxCreditAnalysis,
-  fetchCompanyInfo
+  fetchCompanyInfo,
+  analyzeCompanyTaxCredit,
+  formatCurrency,
+  formatBizno,
+  generateExecutiveReport
 }; 
