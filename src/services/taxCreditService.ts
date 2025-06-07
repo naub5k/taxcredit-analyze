@@ -228,6 +228,12 @@ interface ExecutiveReport {
   totalPotentialCredit: number;
   riskAssessment: string;
   nextSteps: string[];
+  핵심요약: {
+    총세액공제가능액: string;
+    즉시신청추천액: string;
+    신중검토필요액: string;
+    신청불가액: string;
+  };
 }
 
 /**
@@ -255,7 +261,13 @@ export const generateExecutiveReport = (
       '세무 전문가 상담',
       '필요 서류 준비',
       '신청 일정 계획 수립'
-    ]
+    ],
+    핵심요약: {
+      총세액공제가능액: formatCurrency(summary?.총계 || 0),
+      즉시신청추천액: formatCurrency(summary?.사후관리종료 || 0),
+      신중검토필요액: formatCurrency(summary?.사후관리진행중 || 0),
+      신청불가액: formatCurrency(summary?.기간경과미신청 || 0)
+    }
   };
 };
 
