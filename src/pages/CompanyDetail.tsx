@@ -718,7 +718,7 @@ export default function CompanyDetail() {
                           <Badge 
                             variant={
                               result.status === '사후관리종료' ? 'default' :
-                              result.status === '사후관리진행중' ? 'secondary' : 'destructive'
+                              result.status === '사후관리진행중' ? 'warning' : 'error'
                             }
                             className={
                               result.status === '사후관리종료' ? 'bg-green-100 text-green-800' :
@@ -768,7 +768,7 @@ export default function CompanyDetail() {
                     <Badge 
                       variant={
                         result.status === '사후관리종료' ? 'default' :
-                        result.status === '사후관리진행중' ? 'secondary' : 'destructive'
+                        result.status === '사후관리진행중' ? 'warning' : 'error'
                       }
                       className={
                         result.status === '사후관리종료' ? 'bg-green-100 text-green-800' :
