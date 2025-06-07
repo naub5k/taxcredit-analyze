@@ -120,6 +120,38 @@ export const fetchCompanyInfo = async (bizno: string): Promise<AnalysisResult> =
 };
 
 /**
+ * Mock 분석 결과 생성 함수
+ */
+function generateMockAnalysisResults(employeeData: { [year: string]: number }): any[] {
+  const results = [];
+  const years = Object.keys(employeeData).map(Number).sort();
+  
+  for (let i = 1; i < years.length; i++) {
+    const prevYear = years[i - 1];
+    const currentYear = years[i];
+    const prevCount = employeeData[prevYear.toString()];
+    const currentCount = employeeData[currentYear.toString()];
+    const increaseCount = currentCount - prevCount;
+    
+    if (increaseCount > 0) {
+      results.push({
+        year: currentYear,
+        increaseCount: increaseCount,
+        employmentCredit: increaseCount * 2200,
+        socialInsuranceCredit: increaseCount * 1000,
+        totalCredit: increaseCount * 3200,
+        status: '사후관리진행중',
+        classification: { icon: '📈', title: '고용증대' },
+        amendmentDeadline: `${currentYear + 1}-03-31`,
+        managementEndDate: `${currentYear + 3}-12-31`
+      });
+    }
+  }
+  
+  return results;
+}
+
+/**
  * 회사 세액공제 분석 함수
  */
 export const analyzeCompanyTaxCredit = (
@@ -185,21 +217,38 @@ export const formatBizno = (bizno: string): string => {
 };
 
 /**
+ * 경영진 보고서 인터페이스
+ */
+interface ExecutiveReport {
+  title: string;
+  summary: any;
+  companyInfo: any;
+  recommendations: string[];
+  실행권고사항: string[];
+  totalPotentialCredit: number;
+  riskAssessment: string;
+  nextSteps: string[];
+}
+
+/**
  * 경영진 보고서 생성 함수
  */
 export const generateExecutiveReport = (
   summary: any, 
   companyInfo: any = null
-): any => {
+): ExecutiveReport => {
+  const recommendations = [
+    '💚 즉시 신청 가능한 세액공제 항목 우선 처리',
+    '📋 사후관리 기간 내 필요 서류 준비',
+    '📈 향후 고용증대 계획 수립 검토'
+  ];
+
   return {
     title: '세액공제 분석 경영진 보고서',
     summary: summary,
     companyInfo: companyInfo,
-    recommendations: [
-      '즉시 신청 가능한 세액공제 항목 우선 처리',
-      '사후관리 기간 내 필요 서류 준비',
-      '향후 고용증대 계획 수립 검토'
-    ],
+    recommendations: recommendations,
+    실행권고사항: recommendations, // 한국어 속성명도 같이 제공
     totalPotentialCredit: summary?.총계 || 0,
     riskAssessment: '낮음',
     nextSteps: [
