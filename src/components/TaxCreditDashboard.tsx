@@ -20,6 +20,7 @@ const TaxCreditDashboard = () => {
   // 🏢 **업종 선택 상태 관리**
   const [industryOptions, setIndustryOptions] = useState<any[]>([]);
   const [showIndustrySelector, setShowIndustrySelector] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedIndustry, setSelectedIndustry] = useState<any>(null);
   
   // 🎛️ **연도별 개별 조정 파라미터** - 각 연도마다 다른 설정 가능
@@ -653,6 +654,7 @@ const TaxCreditDashboard = () => {
   }, [analysisData, yearlyParams]);
 
   // 🚨 **사후관리 위반 위험 분석 (감소분만)**
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const riskAnalysis = useMemo(() => {
     if (!analysisData || !analysisData.employeeData) {
       return [];
@@ -704,6 +706,7 @@ const TaxCreditDashboard = () => {
   }, [analysisData, detailedAnalysis]);
 
   // "좋은느낌" 샘플 데이터
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sampleData = {
     companyInfo: {
       bizno: '1234567890',
@@ -735,6 +738,7 @@ const TaxCreditDashboard = () => {
   };
 
   // 🏢 펜타플로 실제 데이터 (노트북LM 분석 기반)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const pentaploSampleData = {
     companyInfo: {
       bizno: '1018197530',
@@ -751,6 +755,7 @@ const TaxCreditDashboard = () => {
   };
 
   // 🏢 김종칠세무회계사무소 실제 데이터 (감소분 포함)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const kimJongChilSampleData = {
     companyInfo: {
       bizno: '1010138752',
@@ -767,6 +772,7 @@ const TaxCreditDashboard = () => {
   };
 
   // 🏢 테스트 회사 (1010123109) - 감소분 포함 테스트 데이터
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const testCompanySampleData = {
     companyInfo: {
       bizno: '1010123109',
