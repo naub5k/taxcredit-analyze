@@ -522,7 +522,7 @@ export default function CompanyDetail() {
             </p>
             <div className="flex space-x-4 mt-2">
               {/* ✅ InsuCleanRecord 정확한 컬럼명들 사용 - 안전한 접근 */}
-              <Badge variant="outline">{(() => {
+              <Badge variant="default">{(() => {
                 try {
                   const sido = companyData?.시도 || '지역정보없음';
                   console.log('🔍 렌더링 중 - 시도:', sido);
@@ -532,7 +532,7 @@ export default function CompanyDetail() {
                   return '지역정보오류';
                 }
               })()}</Badge>
-              <Badge variant="outline">{(() => {
+              <Badge variant="default">{(() => {
                 try {
                   const industry = companyData?.업종명 || '업종정보없음';
                   console.log('🔍 렌더링 중 - 업종명:', industry);
@@ -542,7 +542,7 @@ export default function CompanyDetail() {
                   return '업종정보오류';
                 }
               })()}</Badge>
-              <Badge variant="outline">중소기업</Badge>
+              <Badge variant="default">중소기업</Badge>
             </div>
             
             {/* 🔍 디버깅 정보 (InsuCleanRecord 타입 검증) */}
