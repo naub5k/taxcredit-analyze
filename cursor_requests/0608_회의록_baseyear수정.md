@@ -28,25 +28,3 @@ if (something) {
 의도치 않은 빈 데이터 또는 잘못된 API 응답을 방지
 
 컴포넌트 내부의 null 값 진입 조건 파악 필요
-
-오류 원인은 다음 라인입니다:
-
-ts
-복사
-편집
-const baseYear = employmentData.find((d) => d.year === selectedBaseYear)?.baseYear;
-여기서 .find(...) 결과가 null인데, 그 뒤에 .baseYear를 접근해서 에러가 발생한 것입니다.
-
-✅ 해결 방법 (예외 방지):
-
-ts
-복사
-편집
-const baseYear = employmentData.find((d) => d.year === selectedBaseYear)?.baseYear || 0;
-혹은 조건문으로 감싸 처리해야 합니다:
-
-ts
-복사
-편집
-const found = employmentData.find((d) => d.year === selectedBaseYear);
-const baseYear = found ? found.baseYear : 0;
