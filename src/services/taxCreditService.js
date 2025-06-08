@@ -8,7 +8,7 @@ import { getYearValue, getExclusionStatus } from '../types/InsuCleanRecord';
  * ✅ InsuCleanRecord 타입 헬퍼 함수 활용
  */
 
-// 📊 회사 데이터 가져오기 (DB 스키마 [2016]~[2025] 기준)
+// 📊 회사 데이터 가져오기 (DB 스키마 [2020]~[2025] 기준 - 2019년 이전 경정청구 기한 만료)
 export const fetchCompanyData = async (bizno) => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANALYZE_COMPANY_DATA}?bizno=${bizno}`);
@@ -40,11 +40,12 @@ export const classifyIndustry = (industryCode) => {
   return 신성장업종코드.includes(industryCode?.substring(0,2) || "") ? "신성장서비스업" : "일반업종";
 };
 
-// 📅 경정청구 기간 확인 (5년 기준)
+// 🚨 **경정청구 기간 확인 (1차년도 기준으로 5년)**
 export const checkAmendmentEligibility = (targetYear, currentDate = new Date()) => {
+  // 📅 **중요**: 경정청구는 1차년도 귀속분 기준으로만 가능
   // 법인세 신고기한: 사업연도 종료 후 3개월 (일반적으로 3월 말)
   const filingDeadline = new Date(parseInt(targetYear) + 1, 2, 31); // 3월 31일
-  const amendmentDeadline = new Date(parseInt(targetYear) + 6, 2, 31); // 5년 후 3월 31일
+  const amendmentDeadline = new Date(parseInt(targetYear) + 6, 2, 31); // 1차년도 기준 5년 후 3월 31일
   const isEligible = currentDate <= amendmentDeadline;
   
   return {
@@ -52,7 +53,8 @@ export const checkAmendmentEligibility = (targetYear, currentDate = new Date()) 
     filingDeadline,
     amendmentDeadline,
     remainingDays: Math.max(0, Math.floor((amendmentDeadline - currentDate) / (1000 * 60 * 60 * 24))),
-    status: isEligible ? "경정청구가능" : "기간만료"
+    status: isEligible ? "경정청구가능" : "기간만료",
+    note: "2차년도, 3차년도 혜택은 1차년도 경정청구에 포함됨"
   };
 };
 
@@ -206,7 +208,8 @@ export const convertDbDataToCalculationFormat = (dbData) => {
   
   // ✅ InsuCleanRecord 헬퍼 함수를 사용한 안전한 연도별 데이터 접근
   const employeeData = {};
-  for (let year = 2016; year <= 2025; year++) {
+          // 🚨 **2020년부터 시작 (2019년 이전은 경정청구 기한 만료)**
+        for (let year = 2020; year <= 2025; year++) {
     const yearStr = year.toString();
     const value = getYearValue(dbData, yearStr); // 헬퍼 함수 사용
     

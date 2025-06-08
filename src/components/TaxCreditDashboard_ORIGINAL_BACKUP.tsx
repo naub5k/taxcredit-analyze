@@ -62,16 +62,34 @@ const TaxCreditDashboard = () => {
     const decreaseYearNum = parseInt(decreaseYear);
     const recallTargets = [];
     
+    // 🛡️ **안전 장치: previousResults null 체크**
+    if (!previousResults || !Array.isArray(previousResults)) {
+      console.warn('⚠️ calculateRecallRisk: previousResults가 유효하지 않음', previousResults);
+      return {
+        decreaseYear,
+        decreaseCount,
+        recallTargets: [],
+        totalRecallAmount: 0,
+        description: `${decreaseYear}년 ${decreaseCount}명 감소 (환수 대상 분석 불가)`
+      };
+    }
+    
     // 감소 연도부터 3년 전까지의 증가분 찾기
     for (let i = decreaseYearNum - 1; i >= decreaseYearNum - 3; i--) {
-      const targetResult = previousResults.find(r => parseInt(r.baseYear) === i && r.changeType === 'increase');
+      const targetResult = previousResults.find(r => 
+        r && // 🛡️ r이 null이 아닌지 확인
+        r.baseYear && // 🛡️ baseYear 속성이 존재하는지 확인
+        parseInt(r.baseYear) === i && 
+        r.changeType === 'increase'
+      );
+      
       if (targetResult) {
         recallTargets.push({
           year: i.toString(),
-          increaseCount: targetResult.increaseCount,
-          employmentCredit: targetResult.employmentCredit,
-          socialCredit: targetResult.socialCredit,
-          estimatedRecallAmount: targetResult.availableTotal // 간단 추정
+          increaseCount: targetResult.increaseCount || 0,
+          employmentCredit: targetResult.employmentCredit || {},
+          socialCredit: targetResult.socialCredit || {},
+          estimatedRecallAmount: targetResult.availableTotal || 0 // 간단 추정
         });
       }
     }
@@ -80,7 +98,7 @@ const TaxCreditDashboard = () => {
       decreaseYear,
       decreaseCount,
       recallTargets,
-      totalRecallAmount: recallTargets.reduce((sum, target) => sum + target.estimatedRecallAmount, 0),
+      totalRecallAmount: recallTargets.reduce((sum, target) => sum + (target.estimatedRecallAmount || 0), 0),
       description: `${decreaseYear}년 ${decreaseCount}명 감소로 인해 ${recallTargets.length}년치 세액공제 환수 위험`
     };
   };
@@ -211,13 +229,15 @@ const TaxCreditDashboard = () => {
           othersCount 
         });
         
-        // 경정청구 기한 계산
+        // 🚨 **경정청구 기한 계산 - 1차년도 기준으로 모든 연도 동일 적용**
         const getAmendmentDeadlines = (year: string) => {
           const baseYearNum = parseInt(year);
+          // 📅 **중요**: 경정청구는 1차년도 귀속분 기준으로만 가능하므로 모든 연도 기한이 동일
+          const amendmentDeadline = new Date(baseYearNum + 6, 2, 31); // 1차년도 기준 5년 후 3월 31일
           return {
-            year1: { year: baseYearNum, deadline: new Date(baseYearNum + 6, 4, 31) },
-            year2: { year: baseYearNum + 1, deadline: new Date(baseYearNum + 7, 4, 31) },
-            year3: { year: baseYearNum + 2, deadline: new Date(baseYearNum + 8, 4, 31) }
+            year1: { year: baseYearNum, deadline: amendmentDeadline },
+            year2: { year: baseYearNum + 1, deadline: amendmentDeadline }, // 1차년도와 동일한 기한
+            year3: { year: baseYearNum + 2, deadline: amendmentDeadline }  // 1차년도와 동일한 기한
           };
         };
 
@@ -324,7 +344,7 @@ const TaxCreditDashboard = () => {
           // 📊 **변화 없음(0명) - 명시적 표시로 누락 방지**
           else if (changeCount === 0) {
             // API 결과에 해당 연도가 없다면 "변화 없음"으로 추가
-            const hasApiResult = apiResults.some((result: any) => result.baseYear === currentYear);
+            const hasApiResult = apiResults.some((result: any) => result && result.baseYear === currentYear);
             if (!hasApiResult) {
               decreaseAnalysis.push({
                 baseYear: currentYear,
@@ -396,12 +416,15 @@ const TaxCreditDashboard = () => {
       // 📈 **증가한 경우 세액공제 계산**
       if (changeCount > 0) {
         // ... 기존 증가 계산 로직 유지 ...
+        // 🚨 **경정청구 기한 계산 - 1차년도 기준으로 모든 연도 동일 적용**
         const getAmendmentDeadlines = (baseYear: string) => {
           const baseYearNum = parseInt(baseYear);
+          // 📅 **중요**: 경정청구는 1차년도 귀속분 기준으로만 가능하므로 모든 연도 기한이 동일
+          const amendmentDeadline = new Date(baseYearNum + 6, 2, 31); // 1차년도 기준 5년 후 3월 31일
           return {
-            year1: { year: baseYearNum, deadline: new Date(baseYearNum + 6, 4, 31) },
-            year2: { year: baseYearNum + 1, deadline: new Date(baseYearNum + 7, 4, 31) },
-            year3: { year: baseYearNum + 2, deadline: new Date(baseYearNum + 8, 4, 31) }
+            year1: { year: baseYearNum, deadline: amendmentDeadline },
+            year2: { year: baseYearNum + 1, deadline: amendmentDeadline }, // 1차년도와 동일한 기한
+            year3: { year: baseYearNum + 2, deadline: amendmentDeadline }  // 1차년도와 동일한 기한
           };
         };
 
@@ -517,8 +540,7 @@ const TaxCreditDashboard = () => {
       industry: '일반업종'
     },
     employeeData: {
-      '2016': 8, '2017': 8, '2018': 8, '2019': 11, '2020': 15,
-      '2021': 15, '2022': 15, '2023': 18, '2024': 8, '2025': 18
+      '2019': 11, '2020': 15, '2021': 15, '2022': 15, '2023': 18, '2024': 8, '2025': 18
     },
     analysisResults: [
       {
@@ -548,8 +570,7 @@ const TaxCreditDashboard = () => {
       industry: '일반업종'
     },
     employeeData: {
-      '2016': 14, '2017': 14, '2018': 14, '2019': 17, '2020': 17,
-      '2021': 19, '2022': 23, '2023': 24, '2024': 14, '2025': 21
+      '2019': 17, '2020': 17, '2021': 19, '2022': 23, '2023': 24, '2024': 14, '2025': 21
     },
     analysisResults: [],
     summary: {}
@@ -564,8 +585,7 @@ const TaxCreditDashboard = () => {
       industry: '시흥시'
     },
     employeeData: {
-      '2016': 3, '2017': 4, '2018': 5, '2019': 4, '2020': 5, 
-      '2021': 5, '2022': 6, '2023': 5, '2024': 2, '2025': 6
+      '2019': 4, '2020': 5, '2021': 5, '2022': 6, '2023': 5, '2024': 2, '2025': 6
     },
     analysisResults: [],
     summary: {}
@@ -663,15 +683,13 @@ const TaxCreditDashboard = () => {
       '1018197530': {
         companyName: '(주)펜타플로',
         employeeData: {
-          '2016': 8, '2017': 10, '2018': 12, '2019': 11, '2020': 13, 
-          '2021': 15, '2022': 17, '2023': 19, '2024': 21, '2025': 23
+          '2019': 11, '2020': 13, '2021': 15, '2022': 17, '2023': 19, '2024': 21, '2025': 23
         }
       },
       '1234567890': {
         companyName: '좋은느낌',
         employeeData: {
-          '2016': 5, '2017': 7, '2018': 9, '2019': 11, '2020': 13, 
-          '2021': 15, '2022': 17, '2023': 19, '2024': 21, '2025': 23
+          '2019': 11, '2020': 13, '2021': 15, '2022': 17, '2023': 19, '2024': 21, '2025': 23
         }
       },
       '1010138752': {
@@ -686,8 +704,7 @@ const TaxCreditDashboard = () => {
     const company = companyMap[bizno] || {
       companyName: `회사 (${bizno})`,
       employeeData: {
-        '2016': 5, '2017': 6, '2018': 7, '2019': 8, '2020': 9,
-        '2021': 10, '2022': 11, '2023': 12, '2024': 13, '2025': 14
+        '2019': 8, '2020': 9, '2021': 10, '2022': 11, '2023': 12, '2024': 13, '2025': 14
       }
     };
 
@@ -1039,10 +1056,15 @@ const TaxCreditDashboard = () => {
         </div>
       </div>
 
-      {detailedAnalysis.map((analysis: any, index: number) => {
+      {/* 🚨 2020년 이전 데이터 필터링 (경정청구 기한 만료) */}
+      {detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020).map((analysis: any, index: number) => {
         const yearParams = getYearParams(analysis.baseYear, analysis.increaseCount);
         return (
-        <Card key={index} className="border-l-4 border-l-blue-500">
+        <Card key={index} className={`border-l-4 ${
+          analysis.postManagementStatus?.isRisky || analysis.hasRecallRisk 
+            ? 'border-l-orange-500' 
+            : 'border-l-blue-500'
+        }`}>
           <CardHeader 
             className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
             onClick={() => toggleYear(analysis.baseYear)}
@@ -1060,13 +1082,23 @@ const TaxCreditDashboard = () => {
               
               {/* 오른쪽: 핵심 비즈니스 정보 (크고 강조) */}
               <div className="flex items-center gap-3 flex-wrap">
-                {/* 💰 신청가능 금액 - 가장 중요 */}
+                {/* 💰 신청가능 금액 - 가장 중요 (환수 위험 시 색상 변경) */}
                 {analysis.changeType === 'increase' && !isYearExpanded(analysis.baseYear) && (
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-purple-700">
+                    <div className={`text-2xl font-bold ${
+                      analysis.postManagementStatus?.isRisky || analysis.hasRecallRisk 
+                        ? 'text-orange-700' 
+                        : 'text-purple-700'
+                    }`}>
                       {formatCurrency(analysis.availableTotal)}
                     </div>
-                    <div className="text-xs text-purple-600">신청가능</div>
+                    <div className={`text-xs ${
+                      analysis.postManagementStatus?.isRisky || analysis.hasRecallRisk 
+                        ? 'text-orange-600' 
+                        : 'text-purple-600'
+                    }`}>
+                      {analysis.postManagementStatus?.isRisky || analysis.hasRecallRisk ? '환수위험' : '신청가능'}
+                    </div>
                   </div>
                 )}
                 
@@ -1486,7 +1518,8 @@ const TaxCreditDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {detailedAnalysis.map((analysis: any, index: number) => {
+                {/* 🚨 2020년 이전 데이터 필터링 (경정청구 기한 만료) */}
+                {detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020).map((analysis: any, index: number) => {
                   const rows = [];
                   
                   // 🔍 각 분석 항목의 값들을 콘솔에 출력
