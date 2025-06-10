@@ -1648,49 +1648,7 @@ const TaxCreditDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* 💡 연도별 개별 조정 안내 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>🎛️ 계산 조정 안내</CardTitle>
-          <p className="text-sm text-gray-600">
-            각 연도별로 증가한 인원 구성이 다를 수 있으므로, <strong>연도별 개별 계산 조정</strong>이 필요합니다. 
-            아래 연도별 분석 카드를 펼쳐서 해당 연도의 청년등 인원수와 사회보험료를 정확히 입력해주세요.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2">📋 개별 조정이 필요한 이유</h4>
-            <ul className="text-blue-800 text-sm space-y-1">
-              <li>• 각 연도별로 증가한 직원의 <strong>청년등 비율이 다를 수 있음</strong></li>
-              <li>• 연도별로 <strong>사회보험료 수준이 다를 수 있음</strong></li>
-              <li>• 정확한 세액공제 계산을 위해 <strong>연도별 개별 설정 필수</strong></li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* 💡 분석 개요 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>💡 분석 개요</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose max-w-none">
-            <p className="text-gray-700 mb-4">
-              고용증대세액공제는 <strong>상시근로자 수가 직전 과세연도보다 증가한 중소기업</strong>에게 주어지는 세제 혜택입니다. 
-              최초 증가한 과세연도부터 <strong>최대 3년간 세액공제</strong>를 받을 수 있으며, 
-              사회보험료세액공제는 <strong>2년간 적용</strong>됩니다.
-            </p>
-            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-              <h4 className="font-semibold text-blue-900 mb-2">📋 경정청구 기한 안내</h4>
-              <p className="text-blue-800 text-sm">
-                세액공제를 놓친 경우 <strong>각 과세연도의 법정 신고기한으로부터 5년 이내</strong>에 경정청구를 통해 환급받을 수 있습니다. 
-                예를 들어, 2019년 귀속분은 2025년 5월 31일까지, 2020년 귀속분은 2026년 5월 31일까지 신청 가능합니다.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* 📊 상세 분석 결과 - 아코디언 형태 */}
       <div className="flex items-center justify-between mb-4">
@@ -2578,6 +2536,50 @@ const TaxCreditDashboard = () => {
                   <li>• <Badge className="bg-red-100 text-red-800 text-xs">🚨 위반</Badge>: 인원 감소 발생 연도</li>
                 </ul>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 💡 연도별 개별 조정 안내 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>🎛️ 계산 조정 안내</CardTitle>
+          <p className="text-sm text-gray-600">
+            각 연도별로 증가한 인원 구성이 다를 수 있으므로, <strong>연도별 개별 계산 조정</strong>이 필요합니다. 
+            아래 연도별 분석 카드를 펼쳐서 해당 연도의 청년등 인원수와 사회보험료를 정확히 입력해주세요.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-blue-900 mb-2">📋 개별 조정이 필요한 이유</h4>
+            <ul className="text-blue-800 text-sm space-y-1">
+              <li>• 각 연도별로 증가한 직원의 <strong>청년등 비율이 다를 수 있음</strong></li>
+              <li>• 연도별로 <strong>사회보험료 수준이 다를 수 있음</strong></li>
+              <li>• 정확한 세액공제 계산을 위해 <strong>연도별 개별 설정 필수</strong></li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 💡 분석 개요 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>💡 분석 개요</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose max-w-none">
+            <p className="text-gray-700 mb-4">
+              고용증대세액공제는 <strong>상시근로자 수가 직전 과세연도보다 증가한 중소기업</strong>에게 주어지는 세제 혜택입니다. 
+              최초 증가한 과세연도부터 <strong>최대 3년간 세액공제</strong>를 받을 수 있으며, 
+              사회보험료세액공제는 <strong>2년간 적용</strong>됩니다.
+            </p>
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <h4 className="font-semibold text-blue-900 mb-2">📋 경정청구 기한 안내</h4>
+              <p className="text-blue-800 text-sm">
+                세액공제를 놓친 경우 <strong>각 과세연도의 법정 신고기한으로부터 5년 이내</strong>에 경정청구를 통해 환급받을 수 있습니다. 
+                예를 들어, 2019년 귀속분은 2025년 5월 31일까지, 2020년 귀속분은 2026년 5월 31일까지 신청 가능합니다.
+              </p>
             </div>
           </div>
         </CardContent>
