@@ -485,35 +485,64 @@ const TaxCreditDashboard = () => {
             
             // 감소년도가 사후관리 기간 내에 있는지 확인
             if (decreaseYear >= increaseYear && decreaseYear <= postManagementEndYear) {
-              console.log(`🚨 ${targetResult.baseYear}년 증가분이 ${decreaseResult.baseYear}년 감소로 환수 위험 (사후관리: ${increaseYear}~${postManagementEndYear})`);
+              // 🎯 **핵심**: 각 증가분의 기준 인원과 비교하여 개별 판단
+              const increaseYearEmployees = analysisData.employeeData[increaseYear.toString()] || 0;
+              const decreaseYearEmployees = analysisData.employeeData[decreaseYear.toString()] || 0;
               
-              // 환수 예상 금액 계산
-              const estimatedRecallAmount = targetResult.availableTotal || 0;
+              console.log(`🔍 ${targetResult.baseYear}년 증가분 사후관리 체크:`, {
+                increaseYear,
+                increaseYearEmployees,
+                decreaseYear, 
+                decreaseYearEmployees,
+                isViolation: decreaseYearEmployees < increaseYearEmployees
+              });
               
-              // 기존 상태를 환수 위험으로 업데이트
-              targetResult.postManagementStatus = {
-                ...targetResult.postManagementStatus,
-                status: '환수위험',
-                confidence: '위험',
-                icon: '🚨',
-                bgColor: 'bg-red-100',
-                textColor: 'text-red-800',
-                description: `${decreaseResult.baseYear}년 ${decreaseResult.decreaseCount}명 감소로 인한 환수 위험`,
-                isRisky: true,
-                recallInfo: {
-                  triggerYear: decreaseResult.baseYear,
-                  triggerDecrease: decreaseResult.decreaseCount,
+              // **개별 판단**: 감소년도 인원이 증가년도 기준 미만인 경우만 환수 위험
+              if (decreaseYearEmployees < increaseYearEmployees) {
+                console.log(`🚨 ${targetResult.baseYear}년 증가분 환수 위험: ${decreaseYearEmployees}명 < ${increaseYearEmployees}명`);
+                
+                // 환수 예상 금액 계산
+                const estimatedRecallAmount = targetResult.availableTotal || 0;
+                
+                // 환수 위험으로 업데이트
+                targetResult.postManagementStatus = {
+                  ...targetResult.postManagementStatus,
+                  status: '환수위험',
+                  confidence: '위험',
+                  icon: '🚨',
+                  bgColor: 'bg-red-100',
+                  textColor: 'text-red-800',
+                  description: `${decreaseResult.baseYear}년 인원(${decreaseYearEmployees}명)이 ${increaseYear}년 기준(${increaseYearEmployees}명) 미만으로 환수 위험`,
+                  isRisky: true,
+                  recallInfo: {
+                    triggerYear: decreaseResult.baseYear,
+                    triggerDecrease: decreaseResult.decreaseCount,
+                    estimatedRecallAmount: estimatedRecallAmount
+                  }
+                };
+                
+                // 환수 위험 플래그 추가
+                targetResult.hasRecallRisk = true;
+                targetResult.recallTrigger = {
+                  year: decreaseResult.baseYear,
+                  decreaseCount: decreaseResult.decreaseCount,
                   estimatedRecallAmount: estimatedRecallAmount
-                }
-              };
-              
-              // 환수 위험 플래그 추가
-              targetResult.hasRecallRisk = true;
-              targetResult.recallTrigger = {
-                year: decreaseResult.baseYear,
-                decreaseCount: decreaseResult.decreaseCount,
-                estimatedRecallAmount: estimatedRecallAmount
-              };
+                };
+              } else {
+                console.log(`✅ ${targetResult.baseYear}년 증가분 조건 충족: ${decreaseYearEmployees}명 >= ${increaseYearEmployees}명`);
+                
+                // 조건 충족 - 사후관리 통과
+                targetResult.postManagementStatus = {
+                  ...targetResult.postManagementStatus,
+                  status: '사후관리통과',
+                  confidence: '안전',
+                  icon: '✅',
+                  bgColor: 'bg-green-100',
+                  textColor: 'text-green-800',
+                  description: `${decreaseResult.baseYear}년 인원(${decreaseYearEmployees}명)이 ${increaseYear}년 기준(${increaseYearEmployees}명) 이상으로 조건 충족`,
+                  isRisky: false
+                };
+              }
             }
           }
         });
@@ -733,35 +762,64 @@ const TaxCreditDashboard = () => {
           
           // 감소년도가 사후관리 기간 내에 있는지 확인
           if (decreaseYear >= increaseYear && decreaseYear <= postManagementEndYear) {
-            console.log(`🚨 ${targetResult.baseYear}년 증가분이 ${decreaseResult.baseYear}년 감소로 환수 위험 (사후관리: ${increaseYear}~${postManagementEndYear})`);
+            // 🎯 **핵심**: 각 증가분의 기준 인원과 비교하여 개별 판단
+            const increaseYearEmployees = employeeData[increaseYear.toString()] || 0;
+            const decreaseYearEmployees = employeeData[decreaseYear.toString()] || 0;
             
-            // 환수 예상 금액 계산
-            const estimatedRecallAmount = targetResult.availableTotal || 0;
+            console.log(`🔍 ${targetResult.baseYear}년 증가분 사후관리 체크:`, {
+              increaseYear,
+              increaseYearEmployees,
+              decreaseYear, 
+              decreaseYearEmployees,
+              isViolation: decreaseYearEmployees < increaseYearEmployees
+            });
             
-            // 기존 상태를 환수 위험으로 업데이트
-            targetResult.postManagementStatus = {
-              ...targetResult.postManagementStatus,
-              status: '환수위험',
-              confidence: '위험',
-              icon: '🚨',
-              bgColor: 'bg-red-100',
-              textColor: 'text-red-800',
-              description: `${decreaseResult.baseYear}년 ${decreaseResult.decreaseCount}명 감소로 인한 환수 위험`,
-              isRisky: true,
-              recallInfo: {
-                triggerYear: decreaseResult.baseYear,
-                triggerDecrease: decreaseResult.decreaseCount,
+            // **개별 판단**: 감소년도 인원이 증가년도 기준 미만인 경우만 환수 위험
+            if (decreaseYearEmployees < increaseYearEmployees) {
+              console.log(`🚨 ${targetResult.baseYear}년 증가분 환수 위험: ${decreaseYearEmployees}명 < ${increaseYearEmployees}명`);
+              
+              // 환수 예상 금액 계산
+              const estimatedRecallAmount = targetResult.availableTotal || 0;
+              
+              // 환수 위험으로 업데이트
+              targetResult.postManagementStatus = {
+                ...targetResult.postManagementStatus,
+                status: '환수위험',
+                confidence: '위험',
+                icon: '🚨',
+                bgColor: 'bg-red-100',
+                textColor: 'text-red-800',
+                description: `${decreaseResult.baseYear}년 인원(${decreaseYearEmployees}명)이 ${increaseYear}년 기준(${increaseYearEmployees}명) 미만으로 환수 위험`,
+                isRisky: true,
+                recallInfo: {
+                  triggerYear: decreaseResult.baseYear,
+                  triggerDecrease: decreaseResult.decreaseCount,
+                  estimatedRecallAmount: estimatedRecallAmount
+                }
+              };
+              
+              // 환수 위험 플래그 추가
+              targetResult.hasRecallRisk = true;
+              targetResult.recallTrigger = {
+                year: decreaseResult.baseYear,
+                decreaseCount: decreaseResult.decreaseCount,
                 estimatedRecallAmount: estimatedRecallAmount
-              }
-            };
-            
-            // 환수 위험 플래그 추가
-            targetResult.hasRecallRisk = true;
-            targetResult.recallTrigger = {
-              year: decreaseResult.baseYear,
-              decreaseCount: decreaseResult.decreaseCount,
-              estimatedRecallAmount: estimatedRecallAmount
-            };
+              };
+            } else {
+              console.log(`✅ ${targetResult.baseYear}년 증가분 조건 충족: ${decreaseYearEmployees}명 >= ${increaseYearEmployees}명`);
+              
+              // 조건 충족 - 사후관리 통과
+              targetResult.postManagementStatus = {
+                ...targetResult.postManagementStatus,
+                status: '사후관리통과',
+                confidence: '안전',
+                icon: '✅',
+                bgColor: 'bg-green-100',
+                textColor: 'text-green-800',
+                description: `${decreaseResult.baseYear}년 인원(${decreaseYearEmployees}명)이 ${increaseYear}년 기준(${increaseYearEmployees}명) 이상으로 조건 충족`,
+                isRisky: false
+              };
+            }
           }
         }
       });
