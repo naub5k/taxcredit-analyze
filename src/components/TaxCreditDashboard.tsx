@@ -1264,42 +1264,100 @@ const TaxCreditDashboard = () => {
   const generateChartData = () => {
     if (!analysisData) return [];
 
-    console.log('📊 차트 데이터 생성 시작');
+    console.log('📊 차트 데이터 생성 시작 (detailedAnalysis와 동일한 로직 사용)');
     console.log('📊 employeeData:', analysisData.employeeData);
     console.log('📊 analysisResults:', analysisData.analysisResults);
 
-    // 1️⃣ employeeData가 있으면 2020년부터 고정 시작 (경정청구 기한 고려)
-    if (analysisData.employeeData && Object.keys(analysisData.employeeData).length > 0) {
-      console.log('✅ employeeData 방식 사용 (2020년부터 고정)');
+    // 🔄 detailedAnalysis와 동일한 로직 적용
+    // 1️⃣ API 결과가 있으면 우선 사용
+    if (analysisData.analysisResults && analysisData.analysisResults.length > 0) {
+      console.log('✅ analysisResults 방식 사용 (detailedAnalysis와 동일)');
       
-             // 🔧 2020년부터 강제 시작하여 일관성 확보
-       const chartYears: Array<{year: string, employees: number, change: number}> = [];
+      const chartYears: Array<{year: string, employees: number, change: number}> = [];
       
-             // 2020년 기준값 설정 (이전 연도 데이터가 있으면 사용, 없으면 첫 번째 연도 데이터 사용)
-       let baseEmployees = analysisData.employeeData['2020'] || 
-                          analysisData.employeeData['2019'] || 
-                          analysisData.employeeData['2018'] ||
-                          Object.values(analysisData.employeeData).find((val: any) => Number(val) > 0) || 0;
+      // API 결과를 기반으로 차트 데이터 생성
+      const apiResults = analysisData.analysisResults;
       
-             // 2020년부터 2025년까지 생성
-       for (let year = 2020; year <= 2025; year++) {
-         const yearStr = year.toString();
-         const employees = analysisData.employeeData[yearStr] || baseEmployees;
-         const prevEmployees: number = year === 2020 ? baseEmployees : (chartYears[chartYears.length - 1]?.employees || baseEmployees);
-         
-         chartYears.push({
-           year: yearStr,
-           employees: employees,
-           change: year === 2020 ? 0 : employees - prevEmployees
-         });
-         
-         // 다음 연도 기준값 업데이트
-         if (employees > 0) {
-           baseEmployees = employees;
-         }
-       }
+      // 2020년 기준년도 추가
+      let baseEmployees = 10; // 추정 시작값
+      chartYears.push({
+        year: '2020',
+        employees: baseEmployees,
+        change: 0 // 기준년도는 변화 없음
+      });
+
+      // API 결과를 연도순으로 정렬
+      const sortedResults = apiResults.sort((a: any, b: any) => 
+        parseInt(a.year || a.baseYear) - parseInt(b.year || b.baseYear)
+      );
+
+      let currentEmployees = baseEmployees;
       
-      // 실제 데이터가 있는 연도만 반환 (0명이 계속되는 연도는 제외)
+      // 2021년부터 API 결과 적용
+      for (let year = 2021; year <= 2025; year++) {
+        const yearStr = year.toString();
+        const apiResult = sortedResults.find((r: any) => (r.year || r.baseYear) === yearStr);
+        
+        if (apiResult) {
+          const increaseCount = apiResult.increaseCount || 0;
+          // 🚨 중요: API에서 음수값이 오는 경우 감소분으로 처리
+          const actualChange = increaseCount < 0 ? increaseCount : increaseCount;
+          currentEmployees += actualChange;
+          
+          chartYears.push({
+            year: yearStr,
+            employees: Math.max(currentEmployees, 0), // 음수 방지
+            change: actualChange
+          });
+          
+          console.log(`📊 ${yearStr}년: API 결과 적용 - 증감 ${actualChange}명, 총 ${currentEmployees}명`);
+        } else {
+          // API 결과가 없는 연도는 이전 값 유지
+          chartYears.push({
+            year: yearStr,
+            employees: currentEmployees,
+            change: 0
+          });
+        }
+      }
+
+      // employeeData가 있다면 감소분 추가 분석
+      if (analysisData.employeeData && Object.keys(analysisData.employeeData).length > 0) {
+        console.log('🔍 employeeData로 감소분 추가 분석');
+        const employeeData = analysisData.employeeData;
+        const years = Object.keys(employeeData).sort();
+        
+        // API 결과에 누락된 감소분이 있는지 확인
+        for (let i = 1; i < years.length; i++) {
+          const currentYear = years[i];
+          const previousYear = years[i-1];
+          const currentEmp = employeeData[currentYear];
+          const previousEmp = employeeData[previousYear];
+          const actualChange = currentEmp - previousEmp;
+          
+          // API 결과와 실제 데이터 비교
+          const chartItem = chartYears.find(item => item.year === currentYear);
+          if (chartItem && actualChange < 0) {
+            // 감소분이 API에 누락된 경우 수정
+            const apiChange = chartItem.change;
+            if (apiChange >= 0 && actualChange < 0) {
+              console.log(`🔄 ${currentYear}년 감소분 보정: API ${apiChange}명 → 실제 ${actualChange}명`);
+              chartItem.change = actualChange;
+              chartItem.employees = currentEmp;
+              
+              // 이후 연도들도 연쇄 수정
+              for (let j = chartYears.findIndex(item => item.year === currentYear) + 1; j < chartYears.length; j++) {
+                const nextItem = chartYears[j];
+                const prevItem = chartYears[j-1];
+                if (nextItem.change === 0) { // 변화가 없던 연도는 이전 값으로 조정
+                  nextItem.employees = prevItem.employees;
+                }
+              }
+            }
+          }
+        }
+      }
+
       return chartYears.filter((item, index) => 
         item.employees > 0 || 
         item.change !== 0 || 
@@ -1307,48 +1365,36 @@ const TaxCreditDashboard = () => {
       );
     }
 
-    // 2️⃣ analysisResults에서 차트 데이터 생성 (2020년부터 고정)
-    if (analysisData.analysisResults && analysisData.analysisResults.length > 0) {
-      console.log('✅ analysisResults 방식 사용 (2020년부터 고정)');
-      const results = analysisData.analysisResults;
+    // 2️⃣ API 결과가 없으면 employeeData 직접 사용 (기존 로직 유지)
+    if (analysisData.employeeData && Object.keys(analysisData.employeeData).length > 0) {
+      console.log('✅ employeeData 방식 사용 (API 결과 없음)');
       
-      // 🔧 2020년부터 강제 시작하여 일관성 확보
-      const employeesByYear: {[key: string]: number} = {};
-      let baseEmployees = 10; // 시작 인원 추정값
+      const chartYears: Array<{year: string, employees: number, change: number}> = [];
       
-      // 2020년부터 2025년까지 강제 생성
+      // 2020년 기준값 설정
+      let baseEmployees = analysisData.employeeData['2020'] || 
+                         analysisData.employeeData['2019'] || 
+                         analysisData.employeeData['2018'] ||
+                         Object.values(analysisData.employeeData).find((val: any) => Number(val) > 0) || 0;
+      
+      // 2020년부터 2025년까지 생성
       for (let year = 2020; year <= 2025; year++) {
         const yearStr = year.toString();
-        const result = results.find((r: any) => r.year === yearStr || r.baseYear === yearStr);
-        const increaseCount = result?.increaseCount || 0;
+        const employees = analysisData.employeeData[yearStr] || baseEmployees;
+        const prevEmployees: number = year === 2020 ? baseEmployees : (chartYears[chartYears.length - 1]?.employees || baseEmployees);
         
-        if (year === 2020) {
-          // 2020년은 기준년도
-          employeesByYear[yearStr] = baseEmployees;
-        } else {
-          // 이후 연도는 이전 연도 + 증감
-          const prevEmployees = employeesByYear[(year - 1).toString()] || baseEmployees;
-          employeesByYear[yearStr] = prevEmployees + increaseCount;
+        chartYears.push({
+          year: yearStr,
+          employees: employees,
+          change: year === 2020 ? 0 : employees - prevEmployees
+        });
+        
+        // 다음 연도 기준값 업데이트
+        if (employees > 0) {
+          baseEmployees = employees;
         }
       }
-
-      console.log('📊 재구성된 employeesByYear (2020년부터):', employeesByYear);
-
-             // 차트 데이터 생성 (2020년부터)
-       const chartYears: Array<{year: string, employees: number, change: number}> = [];
-       for (let year = 2020; year <= 2025; year++) {
-         const yearStr = year.toString();
-         const employees = employeesByYear[yearStr] || 0;
-         const prevEmployees: number = year === 2020 ? employees : (employeesByYear[(year - 1).toString()] || 0);
-         
-         chartYears.push({
-           year: yearStr,
-           employees: employees,
-           change: year === 2020 ? 0 : employees - prevEmployees
-         });
-       }
       
-      // 실제 데이터가 있는 연도만 반환
       return chartYears.filter((item, index) => 
         item.employees > 0 || 
         item.change !== 0 || 
