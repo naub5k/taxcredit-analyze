@@ -1055,9 +1055,12 @@ const TaxCreditDashboard = () => {
           if (apiData.data) {
             for (const [key, value] of Object.entries(apiData.data)) {
               if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
-                const numValue = parseInt(String(value)) || 0;
-                if (!isNaN(numValue)) {
-                  employeeData[key] = numValue;
+                const year = parseInt(key);
+                if (year >= 2020) { // 2020년부터만
+                  const numValue = parseInt(String(value)) || 0;
+                  if (!isNaN(numValue)) {
+                    employeeData[key] = numValue;
+                  }
                 }
               }
             }
@@ -1138,13 +1141,16 @@ const TaxCreditDashboard = () => {
         
         const employeeData: {[key: string]: number} = {};
         
-        // 연도 형태의 키만 추출 (4자리 숫자)
+        // 2020년부터만 추출 (경정청구 기한 고려)
         if (apiData.data) {
           for (const [key, value] of Object.entries(apiData.data)) {
             if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
-              const numValue = parseInt(String(value)) || 0;
-              if (!isNaN(numValue)) {
-                employeeData[key] = numValue;
+              const year = parseInt(key);
+              if (year >= 2020) { // 2020년부터만
+                const numValue = parseInt(String(value)) || 0;
+                if (!isNaN(numValue)) {
+                  employeeData[key] = numValue;
+                }
               }
             }
           }
