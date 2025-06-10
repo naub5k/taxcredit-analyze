@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, Cell, LabelList } from 'recharts';
+// Recharts 제거 완료 - 커스텀 그라데이션 차트 사용
 // Service 함수들을 동적으로 import
 
 const TaxCreditDashboard = () => {
@@ -401,8 +401,42 @@ const TaxCreditDashboard = () => {
         }
       }
 
-      // 📋 **증가분과 감소분 결합 후 연도순 정렬**
-      const combinedResults = [...apiResults.filter((result: any) => result && result.baseYear), ...decreaseAnalysis].sort((a: any, b: any) => 
+      // 🔧 **2020년 기준년도를 강제로 추가 (일관성 확보)**
+      const baseYear2020Analysis = [];
+      const hasYear2020 = apiResults.some((result: any) => result && result.baseYear === '2020') || 
+                          decreaseAnalysis.some((result: any) => result.baseYear === '2020');
+      
+      if (!hasYear2020 && employeeData && employeeData['2020']) {
+        console.log('🔧 2020년 기준년도 강제 추가');
+        baseYear2020Analysis.push({
+          baseYear: '2020',
+          increaseCount: 0,
+          adjustedYouthCount: 0,
+          othersCount: 0,
+          changeType: 'base', // 기준년도
+          employmentCredit: { year1: { amount: 0, available: false }, year2: { amount: 0, available: false }, year3: { amount: 0, available: false } },
+          socialCredit: { year1: { amount: 0, available: false }, year2: { amount: 0, available: false } },
+          deadlines: null,
+          availableTotal: 0,
+          postManagementStatus: {
+            status: '기준년도',
+            confidence: '안전',
+            icon: '📊',
+            bgColor: 'bg-blue-100',
+            textColor: 'text-blue-600',
+            description: '2020년 기준년도 - 비교 기준',
+            isRisky: false,
+            isBaseYear: true
+          }
+        });
+      }
+
+      // 📋 **기준년도 + 증가분 + 감소분 결합 후 연도순 정렬**
+      const combinedResults = [
+        ...baseYear2020Analysis,
+        ...apiResults.filter((result: any) => result && result.baseYear), 
+        ...decreaseAnalysis
+      ].sort((a: any, b: any) => 
         parseInt(a.baseYear) - parseInt(b.baseYear)
       );
 
@@ -504,6 +538,32 @@ const TaxCreditDashboard = () => {
     console.log('🔍 추출된 years:', years);
     
     const detailedResults: any[] = [];
+
+    // 🔧 **2020년 기준년도를 강제로 추가 (클라이언트 계산)**
+    if (years.length > 0 && years[0] === '2020') {
+      console.log('🔧 2020년 기준년도 강제 추가 (클라이언트)');
+      detailedResults.push({
+        baseYear: '2020',
+        increaseCount: 0,
+        adjustedYouthCount: 0,
+        othersCount: 0,
+        changeType: 'base', // 기준년도
+        employmentCredit: { year1: { amount: 0, available: false }, year2: { amount: 0, available: false }, year3: { amount: 0, available: false } },
+        socialCredit: { year1: { amount: 0, available: false }, year2: { amount: 0, available: false } },
+        deadlines: null,
+        availableTotal: 0,
+        postManagementStatus: {
+          status: '기준년도',
+          confidence: '안전',
+          icon: '📊',
+          bgColor: 'bg-blue-100',
+          textColor: 'text-blue-600',
+          description: '2020년 기준년도 - 비교 기준',
+          isRisky: false,
+          isBaseYear: true
+        }
+      });
+    }
 
     for (let i = 1; i < years.length; i++) {
       const currentYear = years[i];
@@ -1208,50 +1268,92 @@ const TaxCreditDashboard = () => {
     console.log('📊 employeeData:', analysisData.employeeData);
     console.log('📊 analysisResults:', analysisData.analysisResults);
 
-    // 1️⃣ employeeData가 있으면 기존 방식 사용
+    // 1️⃣ employeeData가 있으면 2020년부터 고정 시작 (경정청구 기한 고려)
     if (analysisData.employeeData && Object.keys(analysisData.employeeData).length > 0) {
-      console.log('✅ employeeData 방식 사용');
-      return Object.keys(analysisData.employeeData).map((year, index, years) => ({
-        year,
-        employees: analysisData.employeeData[year] || 0,
-        change: index > 0 ? (analysisData.employeeData[year] || 0) - (analysisData.employeeData[years[index-1]] || 0) : 0
-      }));
+      console.log('✅ employeeData 방식 사용 (2020년부터 고정)');
+      
+             // 🔧 2020년부터 강제 시작하여 일관성 확보
+       const chartYears: Array<{year: string, employees: number, change: number}> = [];
+      
+             // 2020년 기준값 설정 (이전 연도 데이터가 있으면 사용, 없으면 첫 번째 연도 데이터 사용)
+       let baseEmployees = analysisData.employeeData['2020'] || 
+                          analysisData.employeeData['2019'] || 
+                          analysisData.employeeData['2018'] ||
+                          Object.values(analysisData.employeeData).find((val: any) => Number(val) > 0) || 0;
+      
+             // 2020년부터 2025년까지 생성
+       for (let year = 2020; year <= 2025; year++) {
+         const yearStr = year.toString();
+         const employees = analysisData.employeeData[yearStr] || baseEmployees;
+         const prevEmployees: number = year === 2020 ? baseEmployees : (chartYears[chartYears.length - 1]?.employees || baseEmployees);
+         
+         chartYears.push({
+           year: yearStr,
+           employees: employees,
+           change: year === 2020 ? 0 : employees - prevEmployees
+         });
+         
+         // 다음 연도 기준값 업데이트
+         if (employees > 0) {
+           baseEmployees = employees;
+         }
+       }
+      
+      // 실제 데이터가 있는 연도만 반환 (0명이 계속되는 연도는 제외)
+      return chartYears.filter((item, index) => 
+        item.employees > 0 || 
+        item.change !== 0 || 
+        index === 0 // 첫 번째 연도는 항상 포함
+      );
     }
 
-    // 2️⃣ analysisResults에서 차트 데이터 생성
+    // 2️⃣ analysisResults에서 차트 데이터 생성 (2020년부터 고정)
     if (analysisData.analysisResults && analysisData.analysisResults.length > 0) {
-      console.log('✅ analysisResults 방식 사용');
+      console.log('✅ analysisResults 방식 사용 (2020년부터 고정)');
       const results = analysisData.analysisResults;
       
-      // 연도별 데이터 재구성
+      // 🔧 2020년부터 강제 시작하여 일관성 확보
       const employeesByYear: {[key: string]: number} = {};
       let baseEmployees = 10; // 시작 인원 추정값
       
-      // 분석 결과에서 역산해서 연도별 인원 생성
-      results.forEach((result: any, index: number) => {
-        const year = result.year;
-        const increaseCount = result.increaseCount || 0;
+      // 2020년부터 2025년까지 강제 생성
+      for (let year = 2020; year <= 2025; year++) {
+        const yearStr = year.toString();
+        const result = results.find((r: any) => r.year === yearStr || r.baseYear === yearStr);
+        const increaseCount = result?.increaseCount || 0;
         
-        if (index === 0) {
-          // 첫 번째 연도는 기준
-          employeesByYear[year] = baseEmployees + increaseCount;
-          employeesByYear[(parseInt(year) - 1).toString()] = baseEmployees;
+        if (year === 2020) {
+          // 2020년은 기준년도
+          employeesByYear[yearStr] = baseEmployees;
         } else {
-          // 이후 연도는 누적
-          baseEmployees += increaseCount;
-          employeesByYear[year] = baseEmployees;
+          // 이후 연도는 이전 연도 + 증감
+          const prevEmployees = employeesByYear[(year - 1).toString()] || baseEmployees;
+          employeesByYear[yearStr] = prevEmployees + increaseCount;
         }
-      });
+      }
 
-      console.log('📊 재구성된 employeesByYear:', employeesByYear);
+      console.log('📊 재구성된 employeesByYear (2020년부터):', employeesByYear);
 
-      // 차트 데이터 생성
-      const years = Object.keys(employeesByYear).sort();
-      return years.map((year, index) => ({
-        year,
-        employees: employeesByYear[year] || 0,
-        change: index > 0 ? (employeesByYear[year] || 0) - (employeesByYear[years[index-1]] || 0) : 0
-      }));
+             // 차트 데이터 생성 (2020년부터)
+       const chartYears: Array<{year: string, employees: number, change: number}> = [];
+       for (let year = 2020; year <= 2025; year++) {
+         const yearStr = year.toString();
+         const employees = employeesByYear[yearStr] || 0;
+         const prevEmployees: number = year === 2020 ? employees : (employeesByYear[(year - 1).toString()] || 0);
+         
+         chartYears.push({
+           year: yearStr,
+           employees: employees,
+           change: year === 2020 ? 0 : employees - prevEmployees
+         });
+       }
+      
+      // 실제 데이터가 있는 연도만 반환
+      return chartYears.filter((item, index) => 
+        item.employees > 0 || 
+        item.change !== 0 || 
+        index === 0 // 첫 번째 연도는 항상 포함
+      );
     }
 
     console.log('❌ 차트 데이터 생성 실패');
@@ -1308,112 +1410,126 @@ const TaxCreditDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {/* 인원 수 그래프 */}
+            {/* 인원 수 그래프 - 그라데이션 차트 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">연도별 상시근로자 수</h4>
-              <div className="w-full h-80 md:h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis 
-                      dataKey="year" 
-                      tick={{ fontSize: 12 }}
-                      axisLine={{ stroke: '#374151' }}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      axisLine={{ stroke: '#374151' }}
-                      domain={['dataMin - 2', 'dataMax + 2']}
-                      tickFormatter={(value) => `${value}명`}
-                    />
-                    <Tooltip 
-                      formatter={(value) => [`${value}명`, '인원수']}
-                      labelFormatter={(label) => `${label}년`}
-                      contentStyle={{
-                        backgroundColor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '6px',
-                        fontSize: '14px'
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="employees" 
-                      stroke="#2563eb" 
-                      strokeWidth={3}
-                      dot={{ fill: '#2563eb', strokeWidth: 2, r: 6 }}
-                      activeDot={{ r: 8, fill: '#1d4ed8' }}
-                    >
-                      {/* 📊 데이터 레이블 추가 - 각 점에 정확한 수치 표시 */}
-                      <LabelList 
-                        dataKey="employees" 
-                        position="top" 
-                        style={{ 
-                          fontSize: '12px', 
-                          fontWeight: 'bold', 
-                          fill: '#1f2937',
-                          textAnchor: 'middle'
-                        }}
-                        formatter={(value: any) => `${value}명`}
-                        offset={10}
-                      />
-                    </Line>
-                  </LineChart>
-                </ResponsiveContainer>
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                연도별 상시근로자 수
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">그라데이션 차트</span>
+              </h4>
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6">
+                <div className="bg-white p-6 rounded-lg">
+                  <div className="flex justify-between items-end h-40 px-4">
+                    {chartData.map((item, index) => {
+                      const values = chartData.map(d => d.employees);
+                      const maxValue = Math.max(...values);
+                      const minValue = Math.min(...values);
+                      const value = item.employees;
+                      const ratio = maxValue > minValue ? (value - minValue) / (maxValue - minValue) : 0.5;
+                      const barHeight = Math.max(ratio * 120, 8);
+                      
+                      // 그라데이션 색상 계산
+                      const range = maxValue - minValue;
+                      const colorRatio = range > 0 ? (value - minValue) / range : 1;
+                      const alpha = Math.min(Math.max(0.3 + (colorRatio * 0.7), 0.3), 1.0);
+                      const red = Math.floor(59 + (11 * colorRatio));
+                      const green = Math.floor(130 + (90 * colorRatio));
+                      const blue = Math.floor(246 - (56 * colorRatio));
+                      const backgroundColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+
+                      return (
+                        <div key={index} className="flex flex-col items-center w-full max-w-[120px] text-center">
+                          <div className="text-sm font-bold text-gray-700 mb-2 h-6 flex items-center justify-center">
+                            {value}명
+                          </div>
+                          <div
+                            style={{ 
+                              height: `${barHeight}px`,
+                              backgroundColor: backgroundColor,
+                            }} 
+                            className="w-4/5 rounded-lg transition-all duration-500 ease-in-out hover:scale-105 border border-white/20"
+                            title={`${item.year}년: ${value}명`}
+                          />
+                          <span className="text-xs text-gray-500 mt-2 font-medium">{item.year}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
             
-            {/* 증감량 그래프 */}
+            {/* 증감량 그래프 - 그라데이션 차트 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">연도별 증감량</h4>
-              <div className="w-full h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData.slice(1)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year" />
-                    <YAxis 
-                      domain={['dataMin', 'dataMax']}
-                      tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}명`}
-                    />
-                    {/* 기준선 (0선) 추가 */}
-                    <ReferenceLine y={0} stroke="#000" strokeWidth={1} strokeDasharray="2 2" />
-                    <Tooltip 
-                      formatter={(value: any) => {
-                        const numValue = Number(value);
-                        const sign = numValue > 0 ? '+' : '';
-                        const color = numValue > 0 ? '#10b981' : '#ef4444'; // 증가: 초록, 감소: 빨강
-                        return [
-                          <span style={{ color }}>{`${sign}${value}명`}</span>, 
-                          numValue > 0 ? '증가' : '감소'
-                        ];
-                      }}
-                      labelFormatter={(label) => `${label}년`}
-                    />
-                    <Bar 
-                      dataKey="change" 
-                      name="증감량"
-                    >
-                      {chartData.slice(1).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.change > 0 ? '#10b981' : '#ef4444'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                연도별 증감량
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">보색 그라데이션</span>
+              </h4>
+              <div className="bg-gradient-to-br from-gray-50 to-green-50 rounded-lg p-6">
+                <div className="bg-white p-6 rounded-lg">
+                  <div className="flex justify-between items-center h-32 px-4">
+                    {chartData.slice(1).map((item, index) => {
+                      const values = chartData.slice(1).map(d => Math.abs(d.change));
+                      const maxValue = Math.max(...values);
+                      const value = item.change;
+                      const absValue = Math.abs(value);
+                      const ratio = maxValue > 0 ? absValue / maxValue : 0;
+                      const barHeight = Math.max(ratio * 100, 6);
+                      const isIncrease = value > 0;
+                      
+                      // 보색 그라데이션 색상 계산
+                      const colorRatio = maxValue > 0 ? Math.abs(value) / maxValue : 1;
+                      const alpha = Math.min(Math.max(0.4 + (colorRatio * 0.6), 0.4), 1.0);
+                      
+                      let backgroundColor;
+                      if (value === 0) {
+                        backgroundColor = 'rgba(156, 163, 175, 0.2)'; // 회색 - 변화없음
+                      } else if (isIncrease) {
+                        // 증가: 청록색에서 초록색으로
+                        backgroundColor = `rgba(16, ${Math.floor(185 + (35 * colorRatio))}, ${Math.floor(129 + (26 * colorRatio))}, ${alpha})`;
+                      } else {
+                        // 감소: 주황색에서 빨간색으로
+                        backgroundColor = `rgba(${Math.floor(239 + (16 * colorRatio))}, ${Math.floor(68 - (15 * colorRatio))}, ${Math.floor(68 - (15 * colorRatio))}, ${alpha})`;
+                      }
+
+                      return (
+                        <div key={index} className="flex flex-col items-center w-full max-w-[120px] text-center">
+                          <div className="text-sm font-bold mb-2 h-6 flex items-center justify-center">
+                            <span className={`${isIncrease ? 'text-green-700' : value < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                              {value > 0 ? '+' : ''}{value}명
+                            </span>
+                          </div>
+                          <div
+                            style={{ 
+                              height: `${barHeight}px`,
+                              backgroundColor: backgroundColor,
+                            }} 
+                            className="w-3/4 rounded-lg transition-all duration-500 ease-in-out hover:scale-110 border border-white/30"
+                            title={`${item.year}년: ${value > 0 ? '+' : ''}${value}명 변화`}
+                          />
+                          <span className="text-xs text-gray-500 mt-2 font-medium">{item.year}</span>
+                          <span className="text-[10px] text-gray-400 mt-0.5">
+                            {isIncrease ? '↗️ 증가' : value < 0 ? '↘️ 감소' : '→ 동일'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
               
               {/* 차트 범례 추가 */}
               <div className="mt-2 flex justify-center gap-4 text-xs">
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-green-500 rounded"></div>
-                  <span>증가</span>
+                  <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-green-500 rounded"></div>
+                  <span>증가 (청록→초록)</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-red-500 rounded"></div>
-                  <span>감소</span>
+                  <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-red-500 rounded"></div>
+                  <span>감소 (주황→빨강)</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-8 h-0 border-t border-gray-400 border-dashed"></div>
-                  <span>기준선 (0명)</span>
+                  <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                  <span>변화없음</span>
                 </div>
               </div>
             </div>
@@ -1652,6 +1768,14 @@ const TaxCreditDashboard = () => {
                     <div className="text-xs text-gray-500">변화없음</div>
                   </div>
                 )}
+                {analysis.changeType === 'base' && (
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-blue-600">
+                      기준년도
+                    </div>
+                    <div className="text-xs text-blue-500">비교 기준</div>
+                  </div>
+                )}
                 
                 {/* 🚨 상태 - 세 번째 중요 */}
                 <div className="text-right">
@@ -1679,6 +1803,9 @@ const TaxCreditDashboard = () => {
               )}
               {analysis.changeType === 'none' && (
                 <span>세액공제 해당 없음</span>
+              )}
+              {analysis.changeType === 'base' && (
+                <span>기준년도 - 비교 기준</span>
               )}
               <span className="text-blue-500">
                 {isYearExpanded(analysis.baseYear) ? '▲ 접기' : '▼ 자세히'}
@@ -1850,7 +1977,43 @@ const TaxCreditDashboard = () => {
                 </div>
               )}
 
-              {/* 🚨 사후관리 상태 상세 정보 (공통) */}
+              {/* 📅 기준년도인 경우: 기준년도 설명 */}
+              {analysis.changeType === 'base' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    📅 {analysis.baseYear}년 기준년도
+                    <Badge className="bg-blue-100 text-blue-800 text-xs">
+                      비교 기준
+                    </Badge>
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-100 border border-blue-300 rounded">
+                      <div className="text-sm font-medium text-blue-800 mb-2">📊 기준년도 역할</div>
+                      <div className="text-xs text-blue-700">
+                        • {analysis.baseYear}년은 인원 변화 계산의 기준이 되는 연도입니다.
+                      </div>
+                      <div className="text-xs text-blue-700">
+                        • 다음 연도부터의 인원 증감이 이 연도와 비교되어 계산됩니다.
+                      </div>
+                      <div className="text-xs text-blue-700">
+                        • 기준년도 자체는 세액공제 대상이 아닙니다.
+                      </div>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
+                      <div className="text-sm font-medium text-gray-800 mb-2">ℹ️ 참고 사항</div>
+                      <div className="text-xs text-gray-700">
+                        • 고용증대세액공제는 전년 대비 인원이 증가한 경우에만 적용됩니다.
+                      </div>
+                      <div className="text-xs text-gray-700">
+                        • 경정청구 기한 고려하여 2020년부터 분석을 시작합니다.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 🚨 사후관리 상태 상세 정보 (기준년도 제외) */}
               <div className={`${analysis.postManagementStatus?.bgColor} border border-opacity-50 rounded-lg p-4`}>
                 <h4 className={`font-semibold ${analysis.postManagementStatus?.textColor} mb-3 flex items-center gap-2`}>
                   {analysis.postManagementStatus?.icon} 사후관리 상태 분석
@@ -2060,8 +2223,29 @@ const TaxCreditDashboard = () => {
                     recallRisk: analysis.recallRisk
                   });
                   
+                  // 📅 **기준년도 표시**
+                  if (analysis.changeType === 'base') {
+                    rows.push(
+                      <tr key={`${analysis.baseYear}-base`} className="bg-blue-50 hover:bg-blue-100">
+                        <td className="border border-gray-300 px-3 py-2 font-semibold text-blue-700">
+                          {analysis.baseYear}년<br/>
+                          <span className="text-sm text-blue-600">기준년도</span>
+                        </td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-blue-600">비교 기준</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-blue-600">-</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-blue-600">-</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-gray-400">해당없음</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-gray-400">해당없음</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-gray-400">-</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center text-gray-400">-</td>
+                        <td className="border border-gray-300 px-3 py-2 text-center">
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">📅 기준년도</Badge>
+                        </td>
+                      </tr>
+                    );
+                  }
                   // 📈 **증가분 표시 (환수 위험 구분)**
-                  if (analysis.changeType === 'increase') {
+                  else if (analysis.changeType === 'increase') {
                     // 환수 위험 여부 확인
                     const isRecallRisk = analysis.hasRecallRisk;
                     const rowBgClass = isRecallRisk ? "hover:bg-orange-50 bg-orange-25" : "hover:bg-gray-50";
