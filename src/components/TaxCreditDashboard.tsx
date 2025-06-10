@@ -987,12 +987,25 @@ const TaxCreditDashboard = () => {
       const apiData = await response.json();
       console.log('✅ 선택된 업종 분석 완료:', apiData);
       
-              // 🎯 DB 원본 데이터 그대로 사용 (업종 선택에서도 가공 금지)
+              // 🎯 연도별 직원 수 데이터만 추출 (업종 선택에서도)
         if (apiData.success && apiData.analysisResult) {
           console.log('📊 업종 선택 - API에서 받은 원본 DB 데이터:', apiData.data);
           
-          // employeeData는 API 원본 데이터 그대로 사용
-          const employeeData = apiData.data || {};
+          const employeeData: {[key: string]: number} = {};
+          
+          // 연도 형태의 키만 추출 (4자리 숫자)
+          if (apiData.data) {
+            for (const [key, value] of Object.entries(apiData.data)) {
+              if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
+                const numValue = parseInt(String(value)) || 0;
+                if (!isNaN(numValue)) {
+                  employeeData[key] = numValue;
+                }
+              }
+            }
+          }
+          
+          console.log('📊 업종 선택 - 연도별 직원 수만 추출:', employeeData);
         
         const transformedData = {
           companyInfo: {
@@ -1062,13 +1075,24 @@ const TaxCreditDashboard = () => {
       
       // 🔄 **API 응답 구조를 컴포넌트 기대 구조로 변환**
       if (apiData.success && apiData.analysisResult) {
-        // 🎯 DB 원본 데이터 그대로 사용 (가공 금지)
+        // 🎯 연도별 직원 수 데이터만 추출 (연도 형태 키만)
         console.log('📊 API에서 받은 원본 DB 데이터:', apiData.data);
         
-        // employeeData는 API 원본 데이터 그대로 사용
-        const employeeData = apiData.data || {};
+        const employeeData: {[key: string]: number} = {};
         
-        console.log('📊 사용할 employeeData (원본):', employeeData);
+        // 연도 형태의 키만 추출 (4자리 숫자)
+        if (apiData.data) {
+          for (const [key, value] of Object.entries(apiData.data)) {
+            if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
+              const numValue = parseInt(String(value)) || 0;
+              if (!isNaN(numValue)) {
+                employeeData[key] = numValue;
+              }
+            }
+          }
+        }
+        
+        console.log('📊 연도별 직원 수만 추출:', employeeData);
         
         return {
           companyInfo: apiData.analysisResult.companyInfo || {
@@ -1271,6 +1295,8 @@ const TaxCreditDashboard = () => {
         const employees = employeeData[year];
         const prevEmployees = i === 0 ? employees : employeeData[years[i-1]];
         const change = i === 0 ? 0 : employees - prevEmployees;
+        
+        // 연도별 데이터 확인
         
         chartYears.push({
           year: year,
