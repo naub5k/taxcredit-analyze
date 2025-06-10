@@ -500,34 +500,34 @@ const TaxCreditDashboard = () => {
               // **개별 판단**: 감소년도 인원이 증가년도 기준 미만인 경우만 환수 위험
               if (decreaseYearEmployees < increaseYearEmployees) {
                 console.log(`🚨 ${targetResult.baseYear}년 증가분 환수 위험: ${decreaseYearEmployees}명 < ${increaseYearEmployees}명`);
-                
-                // 환수 예상 금액 계산
-                const estimatedRecallAmount = targetResult.availableTotal || 0;
-                
+              
+              // 환수 예상 금액 계산
+              const estimatedRecallAmount = targetResult.availableTotal || 0;
+              
                 // 환수 위험으로 업데이트
-                targetResult.postManagementStatus = {
-                  ...targetResult.postManagementStatus,
-                  status: '환수위험',
-                  confidence: '위험',
-                  icon: '🚨',
-                  bgColor: 'bg-red-100',
-                  textColor: 'text-red-800',
+              targetResult.postManagementStatus = {
+                ...targetResult.postManagementStatus,
+                status: '환수위험',
+                confidence: '위험',
+                icon: '🚨',
+                bgColor: 'bg-red-100',
+                textColor: 'text-red-800',
                   description: `${decreaseResult.baseYear}년 인원(${decreaseYearEmployees}명)이 ${increaseYear}년 기준(${increaseYearEmployees}명) 미만으로 환수 위험`,
-                  isRisky: true,
-                  recallInfo: {
-                    triggerYear: decreaseResult.baseYear,
-                    triggerDecrease: decreaseResult.decreaseCount,
-                    estimatedRecallAmount: estimatedRecallAmount
-                  }
-                };
-                
-                // 환수 위험 플래그 추가
-                targetResult.hasRecallRisk = true;
-                targetResult.recallTrigger = {
-                  year: decreaseResult.baseYear,
-                  decreaseCount: decreaseResult.decreaseCount,
+                isRisky: true,
+                recallInfo: {
+                  triggerYear: decreaseResult.baseYear,
+                  triggerDecrease: decreaseResult.decreaseCount,
                   estimatedRecallAmount: estimatedRecallAmount
-                };
+                }
+              };
+              
+              // 환수 위험 플래그 추가
+              targetResult.hasRecallRisk = true;
+              targetResult.recallTrigger = {
+                year: decreaseResult.baseYear,
+                decreaseCount: decreaseResult.decreaseCount,
+                estimatedRecallAmount: estimatedRecallAmount
+              };
               } else {
                 console.log(`✅ ${targetResult.baseYear}년 증가분 조건 충족: ${decreaseYearEmployees}명 >= ${increaseYearEmployees}명`);
                 
@@ -777,34 +777,34 @@ const TaxCreditDashboard = () => {
             // **개별 판단**: 감소년도 인원이 증가년도 기준 미만인 경우만 환수 위험
             if (decreaseYearEmployees < increaseYearEmployees) {
               console.log(`🚨 ${targetResult.baseYear}년 증가분 환수 위험: ${decreaseYearEmployees}명 < ${increaseYearEmployees}명`);
-              
-              // 환수 예상 금액 계산
-              const estimatedRecallAmount = targetResult.availableTotal || 0;
-              
+            
+            // 환수 예상 금액 계산
+            const estimatedRecallAmount = targetResult.availableTotal || 0;
+            
               // 환수 위험으로 업데이트
-              targetResult.postManagementStatus = {
-                ...targetResult.postManagementStatus,
-                status: '환수위험',
-                confidence: '위험',
-                icon: '🚨',
-                bgColor: 'bg-red-100',
-                textColor: 'text-red-800',
+            targetResult.postManagementStatus = {
+              ...targetResult.postManagementStatus,
+              status: '환수위험',
+              confidence: '위험',
+              icon: '🚨',
+              bgColor: 'bg-red-100',
+              textColor: 'text-red-800',
                 description: `${decreaseResult.baseYear}년 인원(${decreaseYearEmployees}명)이 ${increaseYear}년 기준(${increaseYearEmployees}명) 미만으로 환수 위험`,
-                isRisky: true,
-                recallInfo: {
-                  triggerYear: decreaseResult.baseYear,
-                  triggerDecrease: decreaseResult.decreaseCount,
-                  estimatedRecallAmount: estimatedRecallAmount
-                }
-              };
-              
-              // 환수 위험 플래그 추가
-              targetResult.hasRecallRisk = true;
-              targetResult.recallTrigger = {
-                year: decreaseResult.baseYear,
-                decreaseCount: decreaseResult.decreaseCount,
+              isRisky: true,
+              recallInfo: {
+                triggerYear: decreaseResult.baseYear,
+                triggerDecrease: decreaseResult.decreaseCount,
                 estimatedRecallAmount: estimatedRecallAmount
-              };
+              }
+            };
+            
+            // 환수 위험 플래그 추가
+            targetResult.hasRecallRisk = true;
+            targetResult.recallTrigger = {
+              year: decreaseResult.baseYear,
+              decreaseCount: decreaseResult.decreaseCount,
+              estimatedRecallAmount: estimatedRecallAmount
+            };
             } else {
               console.log(`✅ ${targetResult.baseYear}년 증가분 조건 충족: ${decreaseYearEmployees}명 >= ${increaseYearEmployees}명`);
               
@@ -1046,17 +1046,17 @@ const TaxCreditDashboard = () => {
       console.log('✅ 선택된 업종 분석 완료:', apiData);
       
               // 🎯 연도별 직원 수 데이터만 추출 (업종 선택에서도)
-        if (apiData.success && apiData.analysisResult) {
+      if (apiData.success && apiData.analysisResult) {
           console.log('📊 업종 선택 - API에서 받은 원본 DB 데이터:', apiData.data);
           
-          const employeeData: {[key: string]: number} = {};
-          
+        const employeeData: {[key: string]: number} = {};
+        
           // 연도 형태의 키만 추출 (4자리 숫자)
-          if (apiData.data) {
+        if (apiData.data) {
             for (const [key, value] of Object.entries(apiData.data)) {
               if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
                 const year = parseInt(key);
-                if (year >= 2020) { // 2020년부터만
+                if (year >= 2019) { // 2019년부터만 (2019년 대비 2020년 증가분 계산 가능)
                   const numValue = parseInt(String(value)) || 0;
                   if (!isNaN(numValue)) {
                     employeeData[key] = numValue;
@@ -1460,7 +1460,7 @@ const TaxCreditDashboard = () => {
                             {value}명
                           </div>
                           <div
-                            style={{ 
+                        style={{ 
                               height: `${barHeight}px`,
                               backgroundColor: backgroundColor,
                             }} 
