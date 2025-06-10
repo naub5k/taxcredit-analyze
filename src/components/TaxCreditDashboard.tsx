@@ -401,15 +401,15 @@ const TaxCreditDashboard = () => {
         }
       }
 
-      // 🔧 **2020년 기준년도를 강제로 추가 (일관성 확보)**
-      const baseYear2020Analysis = [];
-      const hasYear2020 = apiResults.some((result: any) => result && result.baseYear === '2020') || 
-                          decreaseAnalysis.some((result: any) => result.baseYear === '2020');
+      // 🔧 **2019년 기준년도를 강제로 추가 (일관성 확보)**
+      const baseYear2019Analysis = [];
+      const hasYear2019 = apiResults.some((result: any) => result && result.baseYear === '2019') || 
+                          decreaseAnalysis.some((result: any) => result.baseYear === '2019');
       
-      if (!hasYear2020 && employeeData && employeeData['2020']) {
-        console.log('🔧 2020년 기준년도 강제 추가');
-        baseYear2020Analysis.push({
-          baseYear: '2020',
+      if (!hasYear2019 && employeeData && employeeData['2019']) {
+        console.log('🔧 2019년 기준년도 강제 추가');
+        baseYear2019Analysis.push({
+          baseYear: '2019',
           increaseCount: 0,
           adjustedYouthCount: 0,
           othersCount: 0,
@@ -424,7 +424,7 @@ const TaxCreditDashboard = () => {
             icon: '📊',
             bgColor: 'bg-blue-100',
             textColor: 'text-blue-600',
-            description: '2020년 기준년도 - 비교 기준',
+            description: '2019년 기준년도 - 비교 기준',
             isRisky: false,
             isBaseYear: true
           }
@@ -433,7 +433,7 @@ const TaxCreditDashboard = () => {
 
       // 📋 **기준년도 + 증가분 + 감소분 결합 후 연도순 정렬**
       const combinedResults = [
-        ...baseYear2020Analysis,
+        ...baseYear2019Analysis,
         ...apiResults.filter((result: any) => result && result.baseYear), 
         ...decreaseAnalysis
       ].sort((a: any, b: any) => 
@@ -568,11 +568,11 @@ const TaxCreditDashboard = () => {
     
     const detailedResults: any[] = [];
 
-    // 🔧 **2020년 기준년도를 강제로 추가 (클라이언트 계산)**
-    if (years.length > 0 && years[0] === '2020') {
-      console.log('🔧 2020년 기준년도 강제 추가 (클라이언트)');
+    // 🔧 **2019년 기준년도를 강제로 추가 (클라이언트 계산)**
+    if (years.length > 0 && years[0] === '2019') {
+      console.log('🔧 2019년 기준년도 강제 추가 (클라이언트)');
       detailedResults.push({
-        baseYear: '2020',
+        baseYear: '2019',
         increaseCount: 0,
         adjustedYouthCount: 0,
         othersCount: 0,
@@ -587,7 +587,7 @@ const TaxCreditDashboard = () => {
           icon: '📊',
           bgColor: 'bg-blue-100',
           textColor: 'text-blue-600',
-          description: '2020년 기준년도 - 비교 기준',
+          description: '2019년 기준년도 - 비교 기준',
           isRisky: false,
           isBaseYear: true
         }
@@ -1141,12 +1141,12 @@ const TaxCreditDashboard = () => {
         
         const employeeData: {[key: string]: number} = {};
         
-        // 2020년부터만 추출 (경정청구 기한 고려)
+        // 2019년부터만 추출 (경정청구 기한 고려)
         if (apiData.data) {
           for (const [key, value] of Object.entries(apiData.data)) {
             if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
               const year = parseInt(key);
-              if (year >= 2020) { // 2020년부터만
+              if (year >= 2019) { // 2019년부터만
                 const numValue = parseInt(String(value)) || 0;
                 if (!isNaN(numValue)) {
                   employeeData[key] = numValue;
@@ -1657,7 +1657,7 @@ const TaxCreditDashboard = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setExpandedYears(new Set(detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020).map((a: any) => a.baseYear)))}
+            onClick={() => setExpandedYears(new Set(detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2019).map((a: any) => a.baseYear)))}
             className="text-blue-600 hover:text-blue-700"
           >
             📂 모두 펼치기
@@ -1673,8 +1673,8 @@ const TaxCreditDashboard = () => {
         </div>
       </div>
 
-      {/* 🚨 2020년 이전 데이터 필터링 (경정청구 기한 만료) */}
-      {detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020).map((analysis: any, index: number) => {
+      {/* 🚨 2019년 이전 데이터 필터링 (경정청구 기한 만료) */}
+      {detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2019).map((analysis: any, index: number) => {
         const yearParams = getYearParams(analysis.baseYear, analysis.increaseCount);
         return (
         <Card key={index} className={`border-l-4 ${
@@ -1982,7 +1982,7 @@ const TaxCreditDashboard = () => {
                         • 고용증대세액공제는 전년 대비 인원이 증가한 경우에만 적용됩니다.
                       </div>
                       <div className="text-xs text-gray-700">
-                        • 경정청구 기한 고려하여 2020년부터 분석을 시작합니다.
+                        • 경정청구 기한 고려하여 2019년부터 분석을 시작합니다.
                       </div>
                     </div>
                   </div>
@@ -2153,20 +2153,20 @@ const TaxCreditDashboard = () => {
           <p className="text-sm text-gray-600">연도별 세액공제 상세 내역을 표 형태로 정리한 결과입니다</p>
           {/* 🔍 디버깅 정보 추가 */}
           <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
-            🔍 분석된 데이터: {detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020).length}건 (2020년 이후) | 
-            총 신청가능액: {formatCurrency(detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020).reduce((sum: number, a: any) => sum + (a.availableTotal || 0), 0))}
+            🔍 분석된 데이터: {detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2019).length}건 (2019년 이후) | 
+            총 신청가능액: {formatCurrency(detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2019).reduce((sum: number, a: any) => sum + (a.availableTotal || 0), 0))}
           </div>
         </CardHeader>
         <CardContent>
-          {/* 🚨 2020년 이전 데이터 필터링 */}
+          {/* 🚨 2019년 이전 데이터 필터링 */}
           {(() => {
-            const filteredAnalysis = detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2020);
+            const filteredAnalysis = detailedAnalysis.filter(analysis => parseInt(analysis.baseYear) >= 2019);
             
             return filteredAnalysis.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500 mb-2">📊 분석할 데이터가 없습니다</p>
                 <p className="text-sm text-gray-400">
-                  2020년 이후 인원 증가가 있는 연도가 없거나 분석 중입니다.
+                  2019년 이후 인원 증가가 있는 연도가 없거나 분석 중입니다.
                 </p>
               </div>
             ) : (
@@ -2507,7 +2507,7 @@ const TaxCreditDashboard = () => {
                     {formatCurrency(filteredAnalysis.reduce((sum: number, a: any) => sum + (a.availableTotal || 0), 0))}
                   </td>
                   <td className="border border-gray-300 px-3 py-2 text-center" colSpan={2}>
-                    <Badge className="bg-purple-100 text-purple-800">총 {filteredAnalysis.length}건 분석 (2020년 이후)</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">총 {filteredAnalysis.length}건 분석 (2019년 이후)</Badge>
                   </td>
                 </tr>
                   </tbody>
