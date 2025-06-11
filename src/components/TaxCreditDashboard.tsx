@@ -23,6 +23,70 @@ const TaxCreditDashboard = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedIndustry, setSelectedIndustry] = useState<any>(null);
   
+  // 🔢 **업종별 연도별 인원수 데이터 캐시**
+  const [optionEmployeeData, setOptionEmployeeData] = useState<{[optionId: string]: {[year: string]: number}}>({});
+  
+  // 📊 **특정 업종 옵션의 연도별 데이터 가져오기**
+  const fetchOptionEmployeeData = useCallback(async (optionId: string, bizno: string) => {
+    const cacheKey = `${bizno}-${optionId}`;
+    
+    // 이미 캐시된 데이터가 있으면 사용
+    if (optionEmployeeData[cacheKey]) {
+      console.log('📋 캐시된 데이터 사용:', cacheKey);
+      return optionEmployeeData[cacheKey];
+    }
+    
+    try {
+      console.log('📊 업종별 데이터 가져오기:', optionId, bizno);
+      const response = await fetch(`https://taxcredit-api-func.azurewebsites.net/api/analyze?bizno=${bizno}&recordId=${optionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API 오류: ${response.status}`);
+      }
+      
+      const apiData = await response.json();
+      console.log('✅ 업종별 데이터 수신:', optionId, apiData);
+      
+      if (apiData.success && apiData.data) {
+        const employeeData: {[key: string]: number} = {};
+        
+        // 연도 형태의 키만 추출 (4자리 숫자)
+        for (const [key, value] of Object.entries(apiData.data)) {
+          if (key.match(/^\d{4}$/)) { // 4자리 연도인 경우만
+            const year = parseInt(key);
+            if (year >= 2019 && year <= 2025) {
+              const numValue = parseInt(String(value)) || 0;
+              if (!isNaN(numValue)) {
+                employeeData[key] = numValue;
+              }
+            }
+          }
+        }
+        
+        console.log('📊 추출된 연도별 데이터:', optionId, employeeData);
+        
+        // 캐시에 저장 (bizno-optionId 형태로)
+        setOptionEmployeeData(prev => ({
+          ...prev,
+          [cacheKey]: employeeData
+        }));
+        
+        return employeeData;
+      }
+    } catch (error) {
+      console.error('❌ 업종별 데이터 가져오기 실패:', optionId, error);
+    }
+    
+    return {};
+  }, []);
+  
   // 🎛️ **연도별 개별 조정 파라미터** - 각 연도마다 다른 설정 가능
   const [yearlyParams, setYearlyParams] = useState<{[year: string]: {youthCount: number, socialInsurance: number}}>({});
   
@@ -1008,16 +1072,34 @@ const TaxCreditDashboard = () => {
     if (urlBizno) {
       console.log('🔍 URL에서 사업자등록번호 감지:', urlBizno);
       setBizno(urlBizno);
+      // 🗑️ 사업자등록번호가 변경되면 기존 캐시 초기화
+      setOptionEmployeeData({});
       fetchAnalysisData(urlBizno);
     } else {
       // 검색 페이지에서는 데이터 초기화
       setAnalysisData(null);
       setBizno('');
+      setOptionEmployeeData({});
     }
     
     // URL 파라미터에서 사용자 입력값 복원 (연도별 파라미터로 변경됨)
     // 기존 URL 파라미터는 호환성을 위해 유지하되, 새로운 연도별 시스템에서는 각 연도별로 개별 관리
   }, [searchParams, fetchAnalysisData, urlBizno]);
+
+  // 📊 **업종 옵션들의 연도별 데이터 가져오기**
+  useEffect(() => {
+    if (showIndustrySelector && industryOptions.length > 0 && bizno) {
+      console.log('📊 업종 옵션들의 데이터 가져오기 시작', bizno);
+      
+      // 각 업종 옵션의 데이터를 병렬로 가져오기
+      industryOptions.forEach(option => {
+        if (option.id) {
+          console.log('📊 API 호출 시작:', option.id, bizno);
+          fetchOptionEmployeeData(option.id, bizno);
+        }
+      });
+    }
+  }, [showIndustrySelector, industryOptions, bizno, fetchOptionEmployeeData]);
 
   // 🏢 **업종 선택 처리 함수**
   const handleIndustrySelection = async (selectedOption: any) => {
@@ -1127,6 +1209,12 @@ const TaxCreditDashboard = () => {
       // 🏢 **다중 업종 응답 처리**
       if (apiData.success && apiData.multipleRecords) {
         console.log('🏢 다중 업종 감지:', apiData.count, '개');
+        console.log('🔍 업종 옵션 데이터 구조:', apiData.options);
+        // 각 옵션의 구조 확인
+        if (apiData.options && apiData.options.length > 0) {
+          console.log('🔍 첫 번째 옵션 상세:', apiData.options[0]);
+          console.log('🔍 첫 번째 옵션의 모든 키:', Object.keys(apiData.options[0]));
+        }
         setIndustryOptions(apiData.options);
         setShowIndustrySelector(true);
         setLoading(false); // 로딩 상태 해제
@@ -1298,9 +1386,82 @@ const TaxCreditDashboard = () => {
                             <span className="font-medium">설립일:</span> {option.establishedDate}
                           </div>
                           
-                          {/* 연도별 인원 미리보기 */}
-                          <div className="text-xs text-gray-500">
-                            <span className="font-medium">인원 변화:</span> {option.preview}
+                          {/* 연도별 인원 미니 테이블 */}
+                          <div className="mt-3">
+                            <div className="text-xs font-medium text-gray-700 mb-2">📊 연도별 인원수</div>
+                            <div className="bg-gray-50 rounded-lg p-2">
+                              {(() => {
+                                // 캐시된 데이터 사용 또는 로딩 중 표시
+                                const cacheKey = `${bizno}-${option.id}`;
+                                const yearlyData = optionEmployeeData[cacheKey] || {};
+                                const years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+                                const hasData = Object.keys(yearlyData).length > 0;
+                                
+                                // 데이터는 useEffect에서 자동으로 가져옴
+                                console.log('🔍 미니테이블 렌더링:', option.id, cacheKey, hasData, yearlyData);
+                                
+                                return (
+                                  <>
+                                    <div className="grid grid-cols-7 gap-1 text-[10px] text-center">
+                                      {/* 헤더 */}
+                                      {years.map(year => (
+                                        <div key={`header-${year}`} className="font-semibold text-gray-600 py-1">
+                                          {year}
+                                        </div>
+                                      ))}
+                                      
+                                      {/* 인원수 데이터 */}
+                                      {years.map(year => {
+                                        const value = yearlyData[year];
+                                        const hasYearData = value !== undefined && value !== null && !isNaN(value);
+                                        
+                                        return (
+                                          <div 
+                                            key={`data-${year}`} 
+                                            className={`bg-white rounded px-1 py-1 font-bold ${
+                                              year === '2024' ? 'text-orange-600' : 'text-blue-700'
+                                            }`}
+                                          >
+                                            {!hasData ? '...' : hasYearData ? value : '-'}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    
+                                    {/* 증감 표시 */}
+                                    {hasData && (
+                                      <div className="grid grid-cols-6 gap-1 text-[9px] text-center mt-1">
+                                        {years.slice(1).map((year, index) => {
+                                          const currentYear = year;
+                                          const previousYear = years[index];
+                                          const currentValue = yearlyData[currentYear] || 0;
+                                          const previousValue = yearlyData[previousYear] || 0;
+                                          const change = currentValue - previousValue;
+                                          
+                                          let bgColor = 'bg-gray-400';
+                                          if (change > 0) bgColor = 'bg-green-500';
+                                          else if (change < 0) bgColor = 'bg-red-500';
+                                          
+                                          return (
+                                            <div 
+                                              key={`change-${year}`}
+                                              className={`py-0.5 rounded text-white font-medium ${bgColor}`}
+                                            >
+                                              {change > 0 ? '+' : ''}{change || 0}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                    
+                                    {/* 간단한 안내 */}
+                                    <div className="text-[9px] text-gray-500 mt-1 text-center">
+                                      {!hasData ? '🔄 데이터 로딩 중...' : '💡 2024년 데이터는 약 60% 정확도 (주황색 표시)'}
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
                           </div>
                         </div>
                         
