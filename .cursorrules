@@ -1,0 +1,39 @@
+# taxcredit-analyze 프로젝트 규칙
+
+## 🔧 개발 환경 및 작업 방식
+- **Git 작업**: 유비님이 직접 수행 (add, commit, push)
+  - AI는 git 명령어 실행 시간이 너무 오래 걸림
+  - 코드 수정 완료 후 git 작업은 사용자가 직접 진행
+
+## 📁 프로젝트 구조
+- **메인 컴포넌트**: `src/components/TaxCreditDashboard.tsx` (2600+ 라인)
+- **API 엔드포인트**: `https://taxcredit-api-func.azurewebsites.net/api/analyze`
+- **배포**: Azure Static Web Apps
+- **프레임워크**: React + TypeScript + Tailwind CSS
+
+## 🎯 핵심 기능
+- **세액공제 분석**: 고용증대 및 사회보험료 세액공제 계산
+- **업종선택 UI**: 다중 업종 감지 시 선택 인터페이스 제공
+- **연도별 데이터**: 2019~2025년 인원수 기반 분석
+- **실시간 API**: DB에서 실제 연도별 인원수 데이터 조회
+
+## 🔄 데이터 처리 방식
+- **캐싱**: 사업자등록번호별 연도별 데이터 캐시 (`${bizno}-${optionId}`)
+- **API 구조**: 
+  - 다중 업종: `?bizno=${bizno}` → `multipleRecords: true`
+  - 특정 업종: `?bizno=${bizno}&recordId=${optionId}`
+- **연도 추출**: 4자리 숫자 키 (`^\d{4}$`) 패턴으로 2019~2025년 데이터만
+
+## ⚠️ 주의사항
+- **2024년 데이터**: 정확도 약 60% (UI에서 주황색으로 표시)
+- **사업자번호 변경**: 캐시 초기화 필요
+- **빌드 최적화**: Azure 배포 시 `staticwebapp.config.json` 필요
+
+## 🚀 배포 설정
+- **빌드 명령어**: `npm run build`
+- **React Router**: SPA fallback 설정 적용
+- **CORS**: API 호출 시 `mode: 'cors'` 설정
+
+## 📝 개발 히스토리
+- 2024.06.11: 업종선택 UI에 실제 DB 연도별 인원수 미니테이블 추가
+- Azure Static Web Apps 배포 오류 해결 (staticwebapp.config.json 추가) 
