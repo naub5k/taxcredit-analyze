@@ -36,4 +36,25 @@
 
 ## 📝 개발 히스토리
 - 2024.06.11: 업종선택 UI에 실제 DB 연도별 인원수 미니테이블 추가
-- Azure Static Web Apps 배포 오류 해결 (staticwebapp.config.json 추가) 
+- Azure Static Web Apps 배포 오류 해결 및 성공 설정 완료
+
+## ✅ Azure Static Web Apps 배포 성공 설정 (2024.06.11)
+- **핵심 문제**: Oryx 빌드가 건너뛰어져서 index.html을 찾을 수 없었음
+- **해결 방법**:
+  1. `.deployment` 파일 추가: `SCM_DO_BUILD_DURING_DEPLOYMENT=true`
+  2. `.nvmrc` 파일 추가: Node.js 18 버전 지정
+  3. `package.json` 개선: 
+     - `"homepage": "."` 추가 (상대 경로 빌드)
+     - `"build": "CI=false react-scripts build"` (warning 무시)
+     - engines 필드로 Node.js 18+ 명시
+  4. GitHub Actions 설정:
+     - `app_build_command: "npm run build"` 명시
+     - `skip_app_build: false` 강제 설정
+     - 환경 변수: `NODE_OPTIONS: --max_old_space_size=4096`, `CI: false`
+  5. `staticwebapp.config.json` 간소화 (React Router 지원)
+
+## 🚨 배포 시 주의사항
+- **Oryx 빌드 필수**: Azure Static Web Apps는 자체 빌드 시스템 사용
+- **Node.js 버전**: 반드시 .nvmrc로 버전 지정 필요
+- **빌드 명령어**: app_build_command 명시적 설정 필요
+- **메모리 설정**: 대용량 React 앱은 NODE_OPTIONS 메모리 증대 필요 
