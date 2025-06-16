@@ -1,4 +1,9 @@
-# taxcredit-analyze 프로젝트 규칙
+# taxcredit-analyze 프로젝트 규칙 (✅ 배포 완료 - 2025-06-15)
+
+## 📌 배포 정보
+- **배포 주소**: https://delightful-tree-001bf4c00.5.azurestaticapps.net
+- **배포 확인**: 우측 하단 "20250617 커밋 적용됨" 문구 표시
+- **배포 상태**: ✅ 성공 (2025-06-15)
 
 ## 🔧 개발 환경 및 작업 방식
 - **Git 작업**: 유비님이 직접 수행 (add, commit, push)
@@ -11,50 +16,69 @@
 - **배포**: Azure Static Web Apps
 - **프레임워크**: React + TypeScript + Tailwind CSS
 
-## 🎯 핵심 기능
+## 🎯 핵심 기능 (✅ 완료)
 - **세액공제 분석**: 고용증대 및 사회보험료 세액공제 계산
-- **업종선택 UI**: 다중 업종 감지 시 선택 인터페이스 제공
-- **연도별 데이터**: 2019~2025년 인원수 기반 분석
+- **업종선택 UI**: 실제 DB 연동 미니 테이블 구현 완료
+  - 2019-2025년 연도별 직원 수 표시
+  - 전년 대비 증감률 컬러 코딩 (녹색=증가, 빨간색=감소)
+  - 2024년 데이터 특별 표기 (60% 정확도 경고)
 - **실시간 API**: DB에서 실제 연도별 인원수 데이터 조회
 
-## 🔄 데이터 처리 방식
-- **캐싱**: 사업자등록번호별 연도별 데이터 캐시 (`${bizno}-${optionId}`)
+## 🔄 데이터 처리 방식 (최적화 완료)
+- **캐싱 시스템**: `fetchOptionEmployeeData` 함수
+  - 캐시 키: `${bizno}-${optionId}`
+  - 메모리 캐시로 중복 API 호출 방지
 - **API 구조**: 
   - 다중 업종: `?bizno=${bizno}` → `multipleRecords: true`
   - 특정 업종: `?bizno=${bizno}&recordId=${optionId}`
 - **연도 추출**: 4자리 숫자 키 (`^\d{4}$`) 패턴으로 2019~2025년 데이터만
 
-## ⚠️ 주의사항
+## 🛠️ 해결된 주요 문제들
+### 1. **업종 선택 UI 개선** (✅ 완료)
+- **기존**: "personnel change: 2024 0 people" 의미없는 텍스트
+- **개선**: 실제 DB 연동을 통한 연도별 직원 수 미니 테이블
+- **결과**: 사용자가 직관적으로 데이터 변화 추이 확인 가능
+
+### 2. **경로 문제 해결** (✅ 완료)
+- **문제**: 절대 경로 참조로 인한 404 오류
+- **해결**: `package.json`에 `"homepage": "."` 설정
+- **결과**: 상대 경로로 정상 리소스 로딩
+
+### 3. **Azure 배포 최적화** (✅ 완료)
+- **메모리 최적화**: `NODE_OPTIONS=--max_old_space_size=4096`
+- **CI 설정**: `CI=false`로 warning을 오류로 처리하지 않음
+- **빌드 강제화**: `.deployment` 파일로 Oryx 빌드 활성화
+
+## ⚠️ 주의사항 (검증된 설정)
 - **2024년 데이터**: 정확도 약 60% (UI에서 주황색으로 표시)
 - **사업자번호 변경**: 캐시 초기화 필요
-- **빌드 최적화**: Azure 배포 시 `staticwebapp.config.json` 필요
+- **상대 경로**: `homepage: "."` 설정 필수 유지
 
-## 🚀 배포 설정
+## 🚀 검증된 배포 설정
 - **빌드 명령어**: `npm run build`
-- **React Router**: SPA fallback 설정 적용
+- **Node.js 버전**: `.nvmrc`로 18 명시
+- **환경 변수**: `CI=false`, `NODE_OPTIONS=--max_old_space_size=4096`
+- **Azure 설정**: `staticwebapp.config.json` SPA fallback 설정
 - **CORS**: API 호출 시 `mode: 'cors'` 설정
 
-## 📝 개발 히스토리
+## 📊 성능 최적화
+- **API 캐싱**: 중복 호출 방지로 응답 속도 개선
+- **조건부 렌더링**: 필요시에만 미니 테이블 표시
+- **메모리 관리**: 빌드 시 4GB 메모리 할당
+
+## 📝 개발 히스토리 (✅ 완료)
 - 2024.06.11: 업종선택 UI에 실제 DB 연도별 인원수 미니테이블 추가
-- Azure Static Web Apps 배포 오류 해결 및 성공 설정 완료
+- 2025.06.15: Azure Static Web Apps 배포 성공
+- 2025.06.15: 경로 문제 해결 및 배포 확인 시스템 구축
+- 2025.06.16: README.md 문서화 완료
 
-## ✅ Azure Static Web Apps 배포 성공 설정 (2024.06.11)
-- **핵심 문제**: Oryx 빌드가 건너뛰어져서 index.html을 찾을 수 없었음
-- **해결 방법**:
-  1. `.deployment` 파일 추가: `SCM_DO_BUILD_DURING_DEPLOYMENT=true`
-  2. `.nvmrc` 파일 추가: Node.js 18 버전 지정
-  3. `package.json` 개선: 
-     - `"homepage": "."` 추가 (상대 경로 빌드)
-     - `"build": "CI=false react-scripts build"` (warning 무시)
-     - engines 필드로 Node.js 18+ 명시
-  4. GitHub Actions 설정:
-     - `app_build_command: "npm run build"` 명시
-     - `skip_app_build: false` 강제 설정
-     - 환경 변수: `NODE_OPTIONS: --max_old_space_size=4096`, `CI: false`
-  5. `staticwebapp.config.json` 간소화 (React Router 지원)
+## 🔍 배포 검증 방법
+1. **사이트 접속**: https://delightful-tree-001bf4c00.5.azurestaticapps.net
+2. **확인 문구**: 우측 하단 "20250617 커밋 적용됨" 표시 확인
+3. **기능 테스트**: 업종 선택 UI에서 미니 테이블 정상 표시 확인
 
-## 🚨 배포 시 주의사항
-- **Oryx 빌드 필수**: Azure Static Web Apps는 자체 빌드 시스템 사용
-- **Node.js 버전**: 반드시 .nvmrc로 버전 지정 필요
-- **빌드 명령어**: app_build_command 명시적 설정 필요
-- **메모리 설정**: 대용량 React 앱은 NODE_OPTIONS 메모리 증대 필요 
+## 🔄 향후 개발 가이드라인
+- 업종 선택 UI 수정 시 `fetchOptionEmployeeData` 함수 활용
+- 새로운 연도 데이터 추가 시 연도 추출 로직 확인
+- 캐싱 시스템 확장 시 기존 키 구조 유지
+- 배포 시 반드시 배포 확인 문구로 반영 여부 검증 
