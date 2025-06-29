@@ -1086,7 +1086,7 @@ const TaxCreditDashboard = () => {
       // 🔗 **autoAnalyze 파라미터가 있으면 자동으로 분석 시작**
       if (autoAnalyze) {
         console.log('🔗 autoAnalyze=true 감지 - Visual에서 자동 분석 요청');
-        fetchAnalysisData(urlBizno);
+      fetchAnalysisData(urlBizno);
       } else {
         fetchAnalysisData(urlBizno);
       }
