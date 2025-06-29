@@ -5,13 +5,7 @@ export { default as CompanyInfo } from './CompanyInfo';
 export { default as GrowthChart } from './GrowthChart';  
 export { default as TaxCreditAnalysis } from './TaxCreditAnalysis';
 
-// 타입 정의도 함께 export
-export type {
-  CompanyInfoProps,
-  GrowthChartProps,
-  TaxCreditAnalysisProps,
-  AccessLevel
-} from './types';
+// 타입 정의는 아래에서 직접 정의됨
 
 // 공개 레벨 타입 정의
 export type AccessLevel = 'public' | 'partner' | 'premium';
