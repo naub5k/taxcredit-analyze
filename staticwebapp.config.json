@@ -3,6 +3,21 @@
     {
       "route": "/static/*",
       "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/octet-stream"
+      }
+    },
+    {
+      "route": "/dashboard/static/*",
+      "rewrite": "/static/{*restOfPath}",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "route": "/company/static/*", 
+      "rewrite": "/static/{*restOfPath}",
+      "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       }
     },
