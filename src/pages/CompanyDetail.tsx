@@ -12,6 +12,7 @@ import {
   generateExecutiveReport
 } from '../services/taxCreditService';
 import { SummaryCards } from '../components/SummaryCards';
+import PensionInfoBlock from '../components/PensionInfoBlock';
 import { 
   InsuCleanRecord, 
   InsuCleanApiResponse, 
@@ -591,6 +592,12 @@ export default function CompanyDetail() {
           </div>
         </div>
       </div>
+
+      {/* 🏛️ 국민연금 가입인원 정보 블럭 (작업요청서_20250618_009) */}
+      <PensionInfoBlock 
+        defaultBizNo={bizno} 
+        companyName={companyData?.사업장명}
+      />
 
       {/* 💰 4개 핵심 요약 카드 (IDE작업기준서 반영) */}
       <SummaryCards 

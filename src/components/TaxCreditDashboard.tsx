@@ -5,6 +5,10 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
+// 🔗 **공통 컴포넌트 import - 공개구조 분할 기반**
+import { CompanyInfo, GrowthChart, TaxCreditAnalysis } from "./shared";
+// 🏛️ 국민연금 블럭 import 추가 (작업요청서_20250618_010)
+// import PensionInfoBlock from './PensionInfoBlock'; // 기능 완성 전까지 주석 처리
 // Recharts 제거 완료 - 커스텀 그라데이션 차트 사용
 // Service 함수들을 동적으로 import
 
@@ -16,6 +20,10 @@ const TaxCreditDashboard = () => {
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // 🔗 **Visual에서 전달받은 자동 분석 파라미터 처리**
+  const autoAnalyze = searchParams.get('autoAnalyze') === 'true';
+  const expandAll = searchParams.get('expandAll') === 'true';
   
   // 🏢 **업종 선택 상태 관리**
   const [industryOptions, setIndustryOptions] = useState<any[]>([]);
@@ -1074,7 +1082,14 @@ const TaxCreditDashboard = () => {
       setBizno(urlBizno);
       // 🗑️ 사업자등록번호가 변경되면 기존 캐시 초기화
       setOptionEmployeeData({});
-      fetchAnalysisData(urlBizno);
+      
+      // 🔗 **autoAnalyze 파라미터가 있으면 자동으로 분석 시작**
+      if (autoAnalyze) {
+        console.log('🔗 autoAnalyze=true 감지 - Visual에서 자동 분석 요청');
+        fetchAnalysisData(urlBizno);
+      } else {
+        fetchAnalysisData(urlBizno);
+      }
     } else {
       // 검색 페이지에서는 데이터 초기화
       setAnalysisData(null);
@@ -1084,7 +1099,22 @@ const TaxCreditDashboard = () => {
     
     // URL 파라미터에서 사용자 입력값 복원 (연도별 파라미터로 변경됨)
     // 기존 URL 파라미터는 호환성을 위해 유지하되, 새로운 연도별 시스템에서는 각 연도별로 개별 관리
-  }, [searchParams, fetchAnalysisData, urlBizno]);
+  }, [searchParams, fetchAnalysisData, urlBizno, autoAnalyze]);
+
+  // 🔗 **Visual에서 전달받은 자동 확장 파라미터 처리**
+  useEffect(() => {
+    if (expandAll && analysisData && detailedAnalysis.length > 0) {
+      console.log('🔗 expandAll=true 감지 - 모든 연도별 상세분석 자동 확장');
+      
+      // 2019년 이후 모든 연도를 자동으로 확장
+      const allYearsToExpand = detailedAnalysis
+        .filter(analysis => parseInt(analysis.baseYear) >= 2019)
+        .map(analysis => analysis.baseYear);
+      
+      setExpandedYears(new Set(allYearsToExpand));
+      console.log('✅ 자동 확장 완료:', allYearsToExpand);
+    }
+  }, [expandAll, analysisData, detailedAnalysis]);
 
   // 📊 **업종 옵션들의 연도별 데이터 가져오기**
   useEffect(() => {
@@ -1553,261 +1583,50 @@ const TaxCreditDashboard = () => {
       </header>
 
       <main className="container mx-auto py-6 px-4 max-w-7xl space-y-6 md:space-y-8">
-        {/* 🏢 **회사 정보** */}
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="bg-blue-700 text-white p-4 rounded-t-lg">
-            <h2 className="text-xl font-bold">회사 정보</h2>
-            <p className="text-sm opacity-80">{analysisData.companyInfo.companyName}</p>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-700">사업자등록번호</h4>
-                <p className="text-lg font-bold text-blue-700">{analysisData.companyInfo.bizno}</p>
-          </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-700">지역</h4>
-                <p className="text-lg font-bold text-green-700">{analysisData.companyInfo.region}</p>
-          </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-700">업종</h4>
-                <p className="text-lg font-bold text-purple-700">{analysisData.companyInfo.industry}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-700">분석일</h4>
-                <p className="text-lg font-bold text-gray-700">{new Date().toLocaleDateString('ko-KR')}</p>
-              </div>
-            </div>
+        {/* 🏢 **회사 정보 - 공통 컴포넌트 사용** */}
+        <CompanyInfo 
+          companyInfo={{
+            bizno: analysisData.companyInfo.bizno,
+            companyName: analysisData.companyInfo.companyName,
+            region: analysisData.companyInfo.region,
+            industry: analysisData.companyInfo.industry,
+            sido: analysisData.companyInfo.sido,
+            gugun: analysisData.companyInfo.gugun
+          }}
+          accessLevel="premium" // analyze에서는 프리미엄 레벨
+          showFullDetails={true}
+        />
+
+      {/* 🏛️ 국민연금 가입인원 정보 블럭 (작업요청서_20250618_010) - 개발 중 숨김 */}
+      <div className="space-y-4">
+        {/* 🧪 국민연금 테스트 페이지 버튼 (요청서 Ui분리 국민연금블럭 20250619) - 개발자 전용 */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const testUrl = `/pension-test?bizNo=${encodeURIComponent(analysisData.companyInfo.bizno)}&companyName=${encodeURIComponent(analysisData.companyInfo.companyName)}`;
+              window.open(testUrl, '_blank');
+            }}
+            className="text-xs opacity-60 hover:opacity-100 px-2 py-1 h-auto border-gray-300 text-gray-500 hover:text-gray-700 transition-opacity"
+          >
+            🧪 테스트
+          </Button>
         </div>
+        
+        {/* 국민연금 블럭 - 기능 완성 전까지 숨김 */}
+        {/* <PensionInfoBlock 
+          defaultBizNo={analysisData.companyInfo.bizno} 
+          companyName={analysisData.companyInfo.companyName}
+        /> */}
       </div>
 
-      {/* 📊 인원증감 현황 그래프 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>📈 인원 증감 현황</CardTitle>
-          <p className="text-sm text-gray-600">연도별 상시근로자 수 변화와 증감량을 보여줍니다</p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* 인원 수 그래프 - 그라데이션 차트 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                연도별 상시근로자 수
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">그라데이션 차트</span>
-              </h4>
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6">
-                <div className="bg-white p-6 rounded-lg">
-                  <div className="flex justify-between items-end h-40 px-4">
-                    {chartData.map((item, index) => {
-                      const values = chartData.map(d => d.employees);
-                      const maxValue = Math.max(...values);
-                      const minValue = Math.min(...values);
-                      const value = item.employees;
-                      const ratio = maxValue > minValue ? (value - minValue) / (maxValue - minValue) : 0.5;
-                      const barHeight = Math.max(ratio * 120, 8);
-                      
-                      // 그라데이션 색상 계산
-                      const range = maxValue - minValue;
-                      const colorRatio = range > 0 ? (value - minValue) / range : 1;
-                      const alpha = Math.min(Math.max(0.3 + (colorRatio * 0.7), 0.3), 1.0);
-                      const red = Math.floor(59 + (11 * colorRatio));
-                      const green = Math.floor(130 + (90 * colorRatio));
-                      const blue = Math.floor(246 - (56 * colorRatio));
-                      const backgroundColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-
-                      return (
-                        <div key={index} className="flex flex-col items-center w-full max-w-[120px] text-center">
-                          <div className="text-sm font-bold text-gray-700 mb-2 h-6 flex items-center justify-center">
-                            {value}명
-                          </div>
-                          <div
-                        style={{ 
-                              height: `${barHeight}px`,
-                              backgroundColor: backgroundColor,
-                            }} 
-                            className="w-4/5 rounded-lg transition-all duration-500 ease-in-out hover:scale-105 border border-white/20"
-                            title={`${item.year}년: ${value}명`}
-                          />
-                          <span className="text-xs text-gray-500 mt-2 font-medium">{item.year}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* 증감량 그래프 - 그라데이션 차트 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                연도별 증감량
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">보색 그라데이션</span>
-              </h4>
-              <div className="bg-gradient-to-br from-gray-50 to-green-50 rounded-lg p-6">
-                <div className="bg-white p-6 rounded-lg">
-                  <div className="flex justify-between items-center h-32 px-4">
-                    {chartData.slice(1).map((item, index) => {
-                      const values = chartData.slice(1).map(d => Math.abs(d.change));
-                      const maxValue = Math.max(...values);
-                      const value = item.change;
-                      const absValue = Math.abs(value);
-                      const ratio = maxValue > 0 ? absValue / maxValue : 0;
-                      const barHeight = Math.max(ratio * 100, 6);
-                      const isIncrease = value > 0;
-                      
-                      // 보색 그라데이션 색상 계산
-                      const colorRatio = maxValue > 0 ? Math.abs(value) / maxValue : 1;
-                      const alpha = Math.min(Math.max(0.4 + (colorRatio * 0.6), 0.4), 1.0);
-                      
-                      let backgroundColor;
-                      if (value === 0) {
-                        backgroundColor = 'rgba(156, 163, 175, 0.2)'; // 회색 - 변화없음
-                      } else if (isIncrease) {
-                        // 증가: 청록색에서 초록색으로
-                        backgroundColor = `rgba(16, ${Math.floor(185 + (35 * colorRatio))}, ${Math.floor(129 + (26 * colorRatio))}, ${alpha})`;
-                      } else {
-                        // 감소: 주황색에서 빨간색으로
-                        backgroundColor = `rgba(${Math.floor(239 + (16 * colorRatio))}, ${Math.floor(68 - (15 * colorRatio))}, ${Math.floor(68 - (15 * colorRatio))}, ${alpha})`;
-                      }
-
-                      return (
-                        <div key={index} className="flex flex-col items-center w-full max-w-[120px] text-center">
-                          <div className="text-sm font-bold mb-2 h-6 flex items-center justify-center">
-                            <span className={`${isIncrease ? 'text-green-700' : value < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                              {value > 0 ? '+' : ''}{value}명
-                            </span>
-                          </div>
-                          <div
-                            style={{ 
-                              height: `${barHeight}px`,
-                              backgroundColor: backgroundColor,
-                            }} 
-                            className="w-3/4 rounded-lg transition-all duration-500 ease-in-out hover:scale-110 border border-white/30"
-                            title={`${item.year}년: ${value > 0 ? '+' : ''}${value}명 변화`}
-                          />
-                          <span className="text-xs text-gray-500 mt-2 font-medium">{item.year}</span>
-                          <span className="text-[10px] text-gray-400 mt-0.5">
-                            {isIncrease ? '↗️ 증가' : value < 0 ? '↘️ 감소' : '→ 동일'}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-              
-              {/* 차트 범례 추가 */}
-              <div className="mt-2 flex justify-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-green-500 rounded"></div>
-                  <span>증가 (청록→초록)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-red-500 rounded"></div>
-                  <span>감소 (주황→빨강)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-gray-300 rounded"></div>
-                  <span>변화없음</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* 📊 정확한 수치 테이블 추가 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">📋 연도별 정확한 수치</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-200 px-3 py-2 text-center font-medium text-gray-700">연도</th>
-                      <th className="border border-gray-200 px-3 py-2 text-center font-medium text-gray-700">상시근로자 수</th>
-                      <th className="border border-gray-200 px-3 py-2 text-center font-medium text-gray-700">전년 대비 증감</th>
-                      <th className="border border-gray-200 px-3 py-2 text-center font-medium text-gray-700">증감 유형</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {chartData.map((data, index) => (
-                      <tr key={data.year} className="hover:bg-gray-50">
-                        <td className="border border-gray-200 px-3 py-2 text-center font-medium">
-                          {data.year}년
-                        </td>
-                        <td className="border border-gray-200 px-3 py-2 text-center">
-                          <span className="font-bold text-blue-600">{data.employees}명</span>
-                        </td>
-                        <td className="border border-gray-200 px-3 py-2 text-center">
-                          {index === 0 ? (
-                            <span className="text-gray-500">기준연도</span>
-                          ) : (
-                            <span className={`font-semibold ${
-                              data.change > 0 ? 'text-green-600' : 
-                              data.change < 0 ? 'text-red-600' : 'text-gray-600'
-                            }`}>
-                              {data.change > 0 ? '+' : ''}{data.change}명
-                            </span>
-                          )}
-                        </td>
-                        <td className="border border-gray-200 px-3 py-2 text-center">
-                          {index === 0 ? (
-                            <span className="text-gray-500">-</span>
-                          ) : (
-                            <div className="flex items-center justify-center gap-1">
-                              {data.change > 0 ? (
-                                <>
-                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                  <span className="text-green-700 text-xs">증가</span>
-                                </>
-                              ) : data.change < 0 ? (
-                                <>
-                                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                  <span className="text-red-700 text-xs">감소</span>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                  <span className="text-gray-600 text-xs">변화없음</span>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* 요약 정보 */}
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-blue-50 p-3 rounded-lg text-center">
-                  <div className="font-semibold text-blue-800">최대 인원</div>
-                  <div className="text-lg font-bold text-blue-600">
-                    {Math.max(...chartData.map(d => d.employees))}명
-                  </div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-lg text-center">
-                  <div className="font-semibold text-red-800">최소 인원</div>
-                  <div className="text-lg font-bold text-red-600">
-                    {Math.min(...chartData.map(d => d.employees))}명
-                  </div>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg text-center">
-                  <div className="font-semibold text-green-800">총 증가</div>
-                  <div className="text-lg font-bold text-green-600">
-                    +{chartData.slice(1).filter(d => d.change > 0).reduce((sum, d) => sum + d.change, 0)}명
-                  </div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-center">
-                  <div className="font-semibold text-gray-800">현재 인원</div>
-                  <div className="text-lg font-bold text-gray-600">
-                    {chartData[chartData.length - 1]?.employees || 0}명
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 📊 인원증감 현황 - 공통 컴포넌트 사용 */}
+      <GrowthChart 
+        chartData={chartData}
+        accessLevel="premium" // analyze에서는 프리미엄 레벨
+        showChart={true}
+      />
 
 
 
@@ -2749,8 +2568,14 @@ const TaxCreditDashboard = () => {
 
       {/* 🔗 **푸터** */}
       <footer className="bg-gray-800 text-white py-4 mt-8">
-        <div className="container mx-auto text-center">
+        <div className="container mx-auto text-center space-y-2">
           <p className="text-sm">© 2025 세액공제 분석 시스템 | 고용증대 및 사회보험료 세액공제</p>
+          <div className="border-t border-gray-600 pt-2">
+            <p className="text-xs text-gray-300">
+              ⚠️ 이 화면은 고용증대 세액공제 분석 정보의 일부만 공개된 것입니다. 상세 분석은 정식 파트너 인증 후 확인 가능합니다.
+            </p>
+          </div>
+          <p className="text-xs opacity-60 mt-1">20250629 리팩토링 적용됨</p>
         </div>
       </footer>
     </div>

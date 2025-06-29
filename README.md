@@ -1,6 +1,7 @@
 # 📊 TaxCredit Analyze - 세액공제 분석 웹앱
 
 > **배포 성공 시점**: 2025-06-15  
+> **API 서버 최적화**: 2025-06-17 (v15 FT_HIT + 800ms 달성)  
 > **배포 주소**: [https://delightful-tree-001bf4c00.5.azurestaticapps.net](https://delightful-tree-001bf4c00.5.azurestaticapps.net)
 
 ## 🎯 **프로젝트 개요**
@@ -85,6 +86,7 @@ const employeeData = await fetchOptionEmployeeData(bizno, optionId);
 - ✅ **업종 선택 UI**: 미니 테이블 정상 작동
 - ✅ **DB 연동**: 실시간 직원 수 데이터 조회 성공
 - ✅ **API 연동**: taxcredit-api-func와 정상 연결
+- 🚀 **API 성능**: v15 최적화로 사업장명 검색 766ms 달성
 
 ## 📝 **개발 및 배포 명령어**
 
@@ -143,5 +145,6 @@ const fetchOptionEmployeeData = async (bizno: string, optionId: string) => {
 
 ---
 
-**Last Updated**: 2025-06-15  
-**Status**: ✅ 배포 성공 및 운영 중
+**Last Updated**: 2025-06-17 (API v15 최적화 연동)  
+**Status**: ✅ 배포 성공 및 운영 중  
+**API Performance**: 🚀 사업장명 검색 766ms (목표 800ms 달성)
