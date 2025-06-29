@@ -2659,7 +2659,7 @@ const TaxCreditDashboard = () => {
               </p>
               <div className="mt-4 pt-3 border-t border-orange-400">
                 <p className="text-sm text-orange-100">
-                  📅 <strong>2025-06-29 기준</strong> | 💎 <strong>프리미엄 서비스</strong> 제공중
+                  📅 <strong>2025-06-29 최신 배포</strong> | 💎 <strong>Footer 강화 완료</strong>
                 </p>
               </div>
             </div>
@@ -2676,7 +2676,7 @@ const TaxCreditDashboard = () => {
               </div>
               <div className="bg-gray-800 bg-opacity-50 p-3 rounded">
                 <strong className="text-purple-400">🚀 배포 상태</strong><br/>
-                20250629 라이브 서비스
+                                 🚀 2025-06-29 최신 배포
               </div>
             </div>
           </div>
@@ -2697,9 +2697,9 @@ const TaxCreditDashboard = () => {
             확인 가능합니다
           </p>
           <div className="mt-2 pt-2 border-t border-orange-400">
-            <p className="text-xs text-orange-100 font-medium">
-              📅 2025-06-29 기준
-            </p>
+                         <p className="text-xs text-orange-100 font-medium">
+               🔥 2025-06-29 배포 완료!
+             </p>
           </div>
         </div>
       </div>
@@ -2709,7 +2709,7 @@ const TaxCreditDashboard = () => {
         <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow-lg border border-blue-400">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs font-medium">Live · 20250629</span>
+                         <span className="text-xs font-medium">🔴 LIVE · 2025-06-29</span>
           </div>
         </div>
       </div>
