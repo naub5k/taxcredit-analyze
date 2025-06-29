@@ -2542,6 +2542,73 @@ const TaxCreditDashboard = () => {
         </CardContent>
       </Card>
 
+      {/* 🤖 AI 기반 세액공제 분석 (접근 레벨별 테스트) */}
+      <div className="space-y-6">
+        {/* Public 레벨 (잠금 표시) */}
+        <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg bg-gray-50">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">🔒 Public 레벨 (일반 사용자)</h3>
+          <TaxCreditAnalysis 
+            taxCreditData={{
+              expectedAmount: detailedAnalysis.reduce((sum: number, a: any) => sum + (a.availableTotal || 0), 0),
+              riskLevel: detailedAnalysis.some((a: any) => a.hasRecallRisk) ? 'high' : 
+                        detailedAnalysis.some((a: any) => !a.employmentCredit?.year1?.available) ? 'medium' : 'low',
+              aiRecommendation: `분석 결과, 총 ${detailedAnalysis.length}개 연도에서 세액공제 대상이 확인되었습니다.`,
+              detailedAnalysis: []
+            }}
+            accessLevel="public"
+            showAnalysis={true}
+          />
+        </div>
+
+        {/* Partner 레벨 (잠금 표시) */}
+        <div className="border-2 border-dashed border-yellow-300 p-4 rounded-lg bg-yellow-50">
+          <h3 className="text-lg font-semibold text-yellow-700 mb-2">🔑 Partner 레벨 (파트너 회원)</h3>
+          <TaxCreditAnalysis 
+            taxCreditData={{
+              expectedAmount: detailedAnalysis.reduce((sum: number, a: any) => sum + (a.availableTotal || 0), 0),
+              riskLevel: detailedAnalysis.some((a: any) => a.hasRecallRisk) ? 'high' : 
+                        detailedAnalysis.some((a: any) => !a.employmentCredit?.year1?.available) ? 'medium' : 'low',
+              aiRecommendation: `분석 결과, 총 ${detailedAnalysis.length}개 연도에서 세액공제 대상이 확인되었습니다.`,
+              detailedAnalysis: []
+            }}
+            accessLevel="partner"
+            showAnalysis={true}
+          />
+        </div>
+
+        {/* Premium 레벨 (전체 표시) */}
+        <div className="border-2 border-dashed border-purple-300 p-4 rounded-lg bg-purple-50">
+          <h3 className="text-lg font-semibold text-purple-700 mb-2">💎 Premium 레벨 (프리미엄 회원)</h3>
+          <TaxCreditAnalysis 
+            taxCreditData={{
+              expectedAmount: detailedAnalysis.reduce((sum: number, a: any) => sum + (a.availableTotal || 0), 0),
+              riskLevel: detailedAnalysis.some((a: any) => a.hasRecallRisk) ? 'high' : 
+                        detailedAnalysis.some((a: any) => !a.employmentCredit?.year1?.available) ? 'medium' : 'low',
+              aiRecommendation: `분석 결과, 총 ${detailedAnalysis.length}개 연도에서 세액공제 대상이 확인되었습니다. ${
+                detailedAnalysis.some((a: any) => a.hasRecallRisk) 
+                  ? '환수 위험이 있는 연도가 확인되어 즉시 전문가 상담을 권장합니다.' 
+                  : detailedAnalysis.some((a: any) => !a.employmentCredit?.year1?.available)
+                    ? '일부 연도의 경정청구 기한이 임박했습니다. 조속한 신청을 권장합니다.'
+                    : '대부분의 세액공제가 안전한 상태입니다. 계획적인 신청 진행을 권장합니다.'
+              }`,
+              detailedAnalysis: detailedAnalysis.slice(0, 3).map((analysis: any) => ({
+                baseYear: analysis.baseYear,
+                employeeCount: analysis.increaseCount || 0,
+                qualifiedEmployees: analysis.adjustedYouthCount || 0,
+                creditAmount: analysis.availableTotal || 0,
+                riskFactors: analysis.hasRecallRisk 
+                  ? [`${analysis.recallTrigger?.year}년 인원 감소로 인한 환수 위험`]
+                  : analysis.employmentCredit?.year1?.available 
+                    ? [] 
+                    : ['경정청구 기한 만료 임박']
+              }))
+            }}
+            accessLevel="premium"
+            showAnalysis={true}
+          />
+        </div>
+      </div>
+
       {/* 💡 분석 개요 */}
       <Card>
         <CardHeader>
