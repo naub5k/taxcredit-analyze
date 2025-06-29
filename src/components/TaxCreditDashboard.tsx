@@ -2633,18 +2633,86 @@ const TaxCreditDashboard = () => {
       </Card>
       </main>
 
-      {/* 🔗 **푸터** */}
-      <footer className="bg-gray-800 text-white py-4 mt-8">
-        <div className="container mx-auto text-center space-y-2">
-          <p className="text-sm">© 2025 세액공제 분석 시스템 | 고용증대 및 사회보험료 세액공제</p>
-          <div className="border-t border-gray-600 pt-2">
-            <p className="text-xs text-gray-300">
-              ⚠️ 이 화면은 고용증대 세액공제 분석 정보의 일부만 공개된 것입니다. 상세 분석은 정식 파트너 인증 후 확인 가능합니다.
-            </p>
+      {/* 🔗 **푸터** - 시각적 강화 버전 */}
+      <footer className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 text-white py-8 mt-12 border-t-4 border-blue-500 shadow-2xl">
+        <div className="container mx-auto px-4">
+          {/* 메인 푸터 내용 */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">TC</span>
+              </div>
+              <h3 className="text-xl font-bold text-white">세액공제 분석 시스템</h3>
+            </div>
+            <p className="text-sm text-gray-300">© 2025 고용증대 및 사회보험료 세액공제 전문 분석 플랫폼</p>
+            
+            {/* 중요 공지사항 - 강조된 박스 */}
+            <div className="bg-orange-600 bg-opacity-90 border-2 border-orange-400 rounded-lg p-6 mx-auto max-w-4xl shadow-xl">
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                <div className="text-3xl animate-pulse">⚠️</div>
+                <h4 className="text-lg font-bold text-white">중요 공지사항</h4>
+                <div className="text-3xl animate-pulse">⚠️</div>
+              </div>
+              <p className="text-white font-medium leading-relaxed">
+                이 화면은 고용증대 세액공제 분석 정보의 <strong className="text-yellow-300">일부만 공개</strong>된 것입니다.<br/>
+                <strong className="text-yellow-300">상세 분석은 정식 파트너 인증 후</strong> 확인 가능합니다.
+              </p>
+              <div className="mt-4 pt-3 border-t border-orange-400">
+                <p className="text-sm text-orange-100">
+                  📅 <strong>2025-06-29 기준</strong> | 💎 <strong>프리미엄 서비스</strong> 제공중
+                </p>
+              </div>
+            </div>
+            
+            {/* 부가 정보 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-xs text-gray-400">
+              <div className="bg-gray-800 bg-opacity-50 p-3 rounded">
+                <strong className="text-blue-400">🔧 기술 정보</strong><br/>
+                React + TypeScript + Azure
+              </div>
+              <div className="bg-gray-800 bg-opacity-50 p-3 rounded">
+                <strong className="text-green-400">📊 분석 엔진</strong><br/>
+                AI 기반 세액공제 계산
+              </div>
+              <div className="bg-gray-800 bg-opacity-50 p-3 rounded">
+                <strong className="text-purple-400">🚀 배포 상태</strong><br/>
+                20250629 라이브 서비스
+              </div>
+            </div>
           </div>
-          <p className="text-xs opacity-60 mt-1">20250629 리팩토링 적용됨</p>
         </div>
       </footer>
+
+      {/* 🔔 **우측 하단 고정 알림 박스** - 항상 보이는 중요 공지 */}
+      <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-bounce">
+        <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white p-4 rounded-xl shadow-2xl border-2 border-yellow-400">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="text-2xl animate-pulse">🚨</div>
+            <span className="font-bold text-sm">중요 안내</span>
+            <div className="text-2xl animate-pulse">🚨</div>
+          </div>
+          <p className="text-xs leading-relaxed">
+            <strong className="text-yellow-200">일부 공개 버전</strong><br/>
+            상세 분석은 파트너 인증 후<br/>
+            확인 가능합니다
+          </p>
+          <div className="mt-2 pt-2 border-t border-orange-400">
+            <p className="text-xs text-orange-100 font-medium">
+              📅 2025-06-29 기준
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 🔔 **좌측 하단 고정 상태 표시** - 배포 정보 */}
+      <div className="fixed bottom-4 left-4 z-40">
+        <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow-lg border border-blue-400">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-xs font-medium">Live · 20250629</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
