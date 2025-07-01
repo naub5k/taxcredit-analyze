@@ -1103,16 +1103,24 @@ const TaxCreditDashboard = () => {
 
   // 🔗 **Visual에서 전달받은 자동 확장 파라미터 처리**
   useEffect(() => {
-    if (expandAll && analysisData && detailedAnalysis.length > 0) {
-      console.log('🔗 expandAll=true 감지 - 모든 연도별 상세분석 자동 확장');
-      
-      // 2019년 이후 모든 연도를 자동으로 확장
-      const allYearsToExpand = detailedAnalysis
-        .filter(analysis => parseInt(analysis.baseYear) >= 2019)
-        .map(analysis => analysis.baseYear);
-      
-      setExpandedYears(new Set(allYearsToExpand));
-      console.log('✅ 자동 확장 완료:', allYearsToExpand);
+    if (analysisData && detailedAnalysis.length > 0) {
+      if (expandAll) {
+        // expandAll=true인 경우에만 모든 연도 확장
+        console.log('🔗 expandAll=true 감지 - 모든 연도별 상세분석 자동 확장');
+        
+        // 2019년 이후 모든 연도를 자동으로 확장
+        const allYearsToExpand = detailedAnalysis
+          .filter(analysis => parseInt(analysis.baseYear) >= 2019)
+          .map(analysis => analysis.baseYear);
+        
+        setExpandedYears(new Set(allYearsToExpand));
+        console.log('✅ 자동 확장 완료:', allYearsToExpand);
+      } else {
+        // expandAll이 없거나 false인 경우 명확히 접힘 상태로 설정
+        console.log('🔗 expandAll=false 또는 없음 - 모든 연도 접힘 상태 유지');
+        setExpandedYears(new Set());
+        console.log('✅ 접힘 상태 적용 완료');
+      }
     }
   }, [expandAll, analysisData, detailedAnalysis]);
 
