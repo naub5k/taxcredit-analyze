@@ -1,84 +1,312 @@
-# taxcredit-analyze 프로젝트 규칙 (✅ 배포 완료 - 2025-06-15)
+# 🎯 TaxCredit-Analyze 프로젝트 규칙 (2025-06-29 버전)
 
-## 📌 배포 정보
-- **배포 주소**: https://delightful-tree-001bf4c00.5.azurestaticapps.net
-- **배포 확인**: 우측 하단 "20250617 커밋 적용됨" 문구 표시
-- **배포 상태**: ✅ 성공 (2025-06-15)
+## 📋 **프로젝트 개요**
+- **프로젝트명**: TaxCredit-Analyze (세액공제 분석 시스템)
+- **유형**: React TypeScript 웹앱 (Premium 버전)
+- **배포 환경**: Azure Static Web Apps
+- **접근 레벨**: Premium (전체 AI 분석 + 세액공제 계산)
 
-## 🔧 개발 환경 및 작업 방식
-- **Git 작업**: 유비님이 직접 수행 (add, commit, push)
-  - AI는 git 명령어 실행 시간이 너무 오래 걸림
-  - 코드 수정 완료 후 git 작업은 사용자가 직접 진행
+## 🚨 **CRITICAL: 2025-06-29 해결된 문제 (절대 반복 금지)**
 
-## 📁 프로젝트 구조
-- **메인 컴포넌트**: `src/components/TaxCreditDashboard.tsx` (2600+ 라인)
-- **API 엔드포인트**: `https://taxcredit-api-func.azurewebsites.net/api/analyze`
-- **배포**: Azure Static Web Apps
-- **프레임워크**: React + TypeScript + Tailwind CSS
+### **1. MIME Type 오류 (근본 원인 해결)**
+```json
+// ❌ 절대 사용 금지 (MIME 오류 발생)
+"homepage": "."
 
-## 🎯 핵심 기능 (✅ 완료)
-- **세액공제 분석**: 고용증대 및 사회보험료 세액공제 계산
-- **업종선택 UI**: 실제 DB 연동 미니 테이블 구현 완료
-  - 2019-2025년 연도별 직원 수 표시
-  - 전년 대비 증감률 컬러 코딩 (녹색=증가, 빨간색=감소)
-  - 2024년 데이터 특별 표기 (60% 정확도 경고)
-- **실시간 API**: DB에서 실제 연도별 인원수 데이터 조회
+// ✅ 반드시 사용 (절대 경로)
+"homepage": "/"
+```
+**이유**: `"homepage": "."`은 `/dashboard/static/css/...` 경로를 `./static/css/...`로 변경하여 MIME 오류 발생
 
-## 🔄 데이터 처리 방식 (최적화 완료)
-- **캐싱 시스템**: `fetchOptionEmployeeData` 함수
-  - 캐시 키: `${bizno}-${optionId}`
-  - 메모리 캐시로 중복 API 호출 방지
-- **API 구조**: 
-  - 다중 업종: `?bizno=${bizno}` → `multipleRecords: true`
-  - 특정 업종: `?bizno=${bizno}&recordId=${optionId}`
-- **연도 추출**: 4자리 숫자 키 (`^\d{4}$`) 패턴으로 2019~2025년 데이터만
+### **2. TypeScript 빌드 오류**
+```typescript
+// ❌ 금지: 존재하지 않는 파일 import
+export type { AccessLevel } from './types';
 
-## 🛠️ 해결된 주요 문제들
-### 1. **업종 선택 UI 개선** (✅ 완료)
-- **기존**: "personnel change: 2024 0 people" 의미없는 텍스트
-- **개선**: 실제 DB 연동을 통한 연도별 직원 수 미니 테이블
-- **결과**: 사용자가 직관적으로 데이터 변화 추이 확인 가능
+// ✅ 필수: 직접 타입 정의
+export type AccessLevel = 'public' | 'partner' | 'premium';
+```
 
-### 2. **경로 문제 해결** (✅ 완료)
-- **문제**: 절대 경로 참조로 인한 404 오류
-- **해결**: `package.json`에 `"homepage": "."` 설정
-- **결과**: 상대 경로로 정상 리소스 로딩
+### **3. 라우팅 설정 (staticwebapp.config.json)**
+```json
+{
+  "routes": [
+    { "route": "/dashboard/static/*", "rewrite": "/static/{*restOfPath}" },
+    { "route": "*.css", "headers": { "content-type": "text/css" } },
+    { "route": "*.js", "headers": { "content-type": "application/javascript; charset=utf-8" } }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/static/*", "*.js", "*.css", "*.json"]
+  }
+}
+```
 
-### 3. **Azure 배포 최적화** (✅ 완료)
-- **메모리 최적화**: `NODE_OPTIONS=--max_old_space_size=4096`
-- **CI 설정**: `CI=false`로 warning을 오류로 처리하지 않음
-- **빌드 강제화**: `.deployment` 파일로 Oryx 빌드 활성화
+## 🏗️ **아키텍처 규칙**
 
-## ⚠️ 주의사항 (검증된 설정)
-- **2024년 데이터**: 정확도 약 60% (UI에서 주황색으로 표시)
-- **사업자번호 변경**: 캐시 초기화 필요
-- **상대 경로**: `homepage: "."` 설정 필수 유지
+### **컴포넌트 구조**
+```
+src/components/
+├── shared/                    # 🆕 공통 컴포넌트 (visual과 공유)
+│   ├── CompanyInfo.tsx       # 회사 정보 표시
+│   ├── GrowthChart.tsx       # 인원증감 차트
+│   ├── TaxCreditAnalysis.tsx # AI 분석 (Premium 전용)
+│   └── index.ts              # 타입 정의 + export
+├── TaxCreditDashboard.tsx    # 메인 대시보드 (2579줄)
+└── ui/                       # 기본 UI 컴포넌트
+```
 
-## 🚀 검증된 배포 설정
-- **빌드 명령어**: `npm run build`
-- **Node.js 버전**: `.nvmrc`로 18 명시
-- **환경 변수**: `CI=false`, `NODE_OPTIONS=--max_old_space_size=4096`
-- **Azure 설정**: `staticwebapp.config.json` SPA fallback 설정
-- **CORS**: API 호출 시 `mode: 'cors'` 설정
+### **접근 제어 시스템**
+```typescript
+// 접근 레벨 정의
+type AccessLevel = 'public' | 'partner' | 'premium';
 
-## 📊 성능 최적화
-- **API 캐싱**: 중복 호출 방지로 응답 속도 개선
-- **조건부 렌더링**: 필요시에만 미니 테이블 표시
-- **메모리 관리**: 빌드 시 4GB 메모리 할당
+// Premium 레벨 (analyze 기본값)
+const accessLevel: AccessLevel = 'premium';
 
-## 📝 개발 히스토리 (✅ 완료)
-- 2024.06.11: 업종선택 UI에 실제 DB 연도별 인원수 미니테이블 추가
-- 2025.06.15: Azure Static Web Apps 배포 성공
-- 2025.06.15: 경로 문제 해결 및 배포 확인 시스템 구축
-- 2025.06.16: README.md 문서화 완료
+// 조건부 렌더링
+{accessLevel === 'premium' && (
+  <TaxCreditAnalysis 
+    taxCreditData={analysisResult}
+    showAnalysis={true}
+  />
+)}
+```
 
-## 🔍 배포 검증 방법
-1. **사이트 접속**: https://delightful-tree-001bf4c00.5.azurestaticapps.net
-2. **확인 문구**: 우측 하단 "20250617 커밋 적용됨" 표시 확인
-3. **기능 테스트**: 업종 선택 UI에서 미니 테이블 정상 표시 확인
+## 🔧 **개발 규칙**
 
-## 🔄 향후 개발 가이드라인
-- 업종 선택 UI 수정 시 `fetchOptionEmployeeData` 함수 활용
-- 새로운 연도 데이터 추가 시 연도 추출 로직 확인
-- 캐싱 시스템 확장 시 기존 키 구조 유지
-- 배포 시 반드시 배포 확인 문구로 반영 여부 검증 
+### **1. 공통 컴포넌트 사용 필수**
+```typescript
+// ✅ 필수: shared 컴포넌트 사용
+import { CompanyInfo, GrowthChart, TaxCreditAnalysis } from '../components/shared';
+
+// ❌ 금지: 중복 컴포넌트 생성
+// 별도 CompanyInfo 컴포넌트 생성 금지
+```
+
+### **2. 타입 정의 일관성**
+```typescript
+// shared/index.ts에서 타입 정의 필수
+export type AccessLevel = 'public' | 'partner' | 'premium';
+
+// 모든 컴포넌트에서 동일한 타입 사용
+interface Props {
+  accessLevel: AccessLevel;
+}
+```
+
+### **3. API 연동 규칙**
+```typescript
+// API 호출 시 버전 확인 필수
+const response = await fetch('/api/analyze');
+const data = await response.json();
+
+// API 버전 로깅
+console.log('API Version:', data.apiInfo?.version);
+```
+
+## 🎯 **성능 최적화 규칙**
+
+### **1. 번들 최적화**
+- **homepage**: 반드시 `"/"` 사용 (절대 경로)
+- **빌드 크기**: 100kB 이하 유지 (gzipped)
+- **React Scripts**: 5.0.1 고정
+
+### **2. 캐싱 전략**
+```typescript
+// API 응답 캐싱
+const cacheKey = `analysis-${bizno}-${baseYear}`;
+const cachedResult = localStorage.getItem(cacheKey);
+```
+
+### **3. 메모리 관리**
+```typescript
+// 대용량 데이터 처리 시 청크 단위
+const processInChunks = (data: any[], chunkSize = 1000) => {
+  // 청크 단위 처리 로직
+};
+```
+
+## 🔗 **연동 규칙**
+
+### **1. Visual 프로젝트 연결**
+```typescript
+// visual → analyze 자동 이동
+const analyzeUrl = `https://delightful-tree-001bf4c00.6.azurestaticapps.net/dashboard/${bizno}?autoAnalyze=true&expandAll=true`;
+window.open(analyzeUrl, '_blank');
+```
+
+### **2. API 서버 연동**
+```typescript
+// API 베이스 URL
+const API_BASE_URL = 'https://taxcredit-api-func.azurewebsites.net';
+
+// 에러 처리 필수
+try {
+  const response = await fetch(`${API_BASE_URL}/api/analyze`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+} catch (error) {
+  console.error('API Error:', error);
+}
+```
+
+## 🚀 **배포 규칙**
+
+### **1. 빌드 설정**
+```json
+// package.json 필수 설정
+{
+  "homepage": "/",
+  "scripts": {
+    "build": "react-scripts build"
+  }
+}
+```
+
+### **2. 환경 변수**
+```bash
+# Azure Static Web Apps 환경 변수
+CI=false
+NODE_OPTIONS=--max_old_space_size=4096
+```
+
+### **3. 배포 검증**
+```bash
+# 빌드 후 검증 필수
+npm run build
+ls build/static/css/  # CSS 파일 존재 확인
+grep "/static/" build/index.html  # 절대 경로 확인
+```
+
+## 🎨 **UI/UX 규칙**
+
+### **1. Footer 표시 규칙**
+```typescript
+// 우측 하단 고정 배치
+<div className="fixed bottom-4 right-4 bg-blue-500 text-white px-3 py-2 rounded-lg shadow-lg text-sm">
+  20250629 커밋 적용됨
+</div>
+```
+
+### **2. 접근 제어 UI**
+```typescript
+// Premium 전용 기능 표시
+{accessLevel === 'premium' ? (
+  <TaxCreditAnalysis />
+) : (
+  <div className="relative">
+    <div className="blur-sm">미리보기</div>
+    <div className="absolute inset-0 flex items-center justify-center">
+      <button>Premium 업그레이드</button>
+    </div>
+  </div>
+)}
+```
+
+## 🧪 **테스트 규칙**
+
+### **1. 빌드 테스트**
+```bash
+# 매번 배포 전 실행 필수
+npm run build
+npm run test -- --watchAll=false
+```
+
+### **2. 라우팅 테스트**
+```bash
+# 로컬에서 빌드 파일 서빙 테스트
+npx serve -s build -l 3000
+curl -I http://localhost:3000/dashboard/
+```
+
+## 🛡️ **보안 규칙**
+
+### **1. 민감 정보 처리**
+```typescript
+// 사업자번호 마스킹
+const maskBizno = (bizno: string) => {
+  return bizno.replace(/(\d{3})(\d{2})(\d{5})/, '$1-$2-*****');
+};
+```
+
+### **2. XSS 방지**
+```typescript
+// HTML 이스케이프 필수
+const escapeHtml = (text: string) => {
+  return text.replace(/[&<>"']/g, (match) => {
+    const map: { [key: string]: string } = {
+      '&': '&amp;', '<': '&lt;', '>': '&gt;',
+      '"': '&quot;', "'": '&#39;'
+    };
+    return map[match];
+  });
+};
+```
+
+## 📊 **모니터링 규칙**
+
+### **1. 성능 로깅**
+```typescript
+// 분석 실행 시간 측정
+const startTime = Date.now();
+await performAnalysis();
+const executionTime = Date.now() - startTime;
+console.log(`Analysis completed in ${executionTime}ms`);
+```
+
+### **2. 에러 추적**
+```typescript
+// 에러 발생 시 상세 로깅
+window.addEventListener('error', (event) => {
+  console.error('Global Error:', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
+});
+```
+
+## 🔄 **Git 작업 규칙**
+
+### **1. 커밋 메시지**
+```bash
+# 형식: type(scope): description
+feat(dashboard): add Premium access control
+fix(mime): resolve CSS loading issue with homepage setting
+perf(api): optimize analysis response time
+```
+
+### **2. 배포 브랜치**
+```bash
+# master 브랜치로 자동 배포
+git checkout master
+git merge feature/your-feature
+git push origin master  # 자동 배포 트리거
+```
+
+## 📈 **성과 측정 규칙**
+
+### **1. 코드 품질**
+- **컴포넌트 재사용률**: 100% (visual과 공유)
+- **타입 안전성**: TypeScript strict 모드
+- **빌드 크기**: 100kB 이하 (gzipped)
+
+### **2. 성능 지표**
+- **초기 로딩**: 3초 이하
+- **분석 실행**: 1초 이하
+- **API 응답**: 800ms 이하
+
+---
+
+## ⚠️ **중요 금지사항**
+
+1. **절대 사용 금지**: `"homepage": "."`
+2. **타입 파일 import 금지**: `from './types'` (존재하지 않음)
+3. **개별 컴포넌트 생성 금지**: shared 컴포넌트 재사용 필수
+4. **라우팅 설정 변경 금지**: staticwebapp.config.json 고정
+5. **빌드 폴더 .gitignore 금지**: Azure 배포 위해 포함 필요
+
+---
+
+**📌 마지막 업데이트**: 2025-06-29 00:45 | **버전**: v0.1.1 | **상태**: �� Production Ready 
