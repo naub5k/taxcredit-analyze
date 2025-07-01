@@ -1123,6 +1123,21 @@ const TaxCreditDashboard = () => {
       }
     }
   }, [expandAll, analysisData, detailedAnalysis]);
+  
+  // 🆕 **강제 접기 로직 - 페이지 로드 완료 후 명시적 접기 실행**
+  useEffect(() => {
+    // 분석 데이터가 로드되고, expandAll이 없거나 false일 때만 실행
+    if (analysisData && detailedAnalysis.length > 0 && !expandAll) {
+      // 0.5초 후 강제로 모든 연도 접기 (다른 로직들이 실행된 후)
+      const timer = setTimeout(() => {
+        console.log('🔒 강제 접기 실행 - 모든 연도를 접힌 상태로 설정');
+        setExpandedYears(new Set());
+        console.log('✅ 강제 접기 완료');
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [analysisData, detailedAnalysis, expandAll]);
 
   // 📊 **업종 옵션들의 연도별 데이터 가져오기**
   useEffect(() => {
